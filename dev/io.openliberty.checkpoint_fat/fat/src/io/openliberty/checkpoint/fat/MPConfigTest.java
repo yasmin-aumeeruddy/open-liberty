@@ -10,15 +10,14 @@
  *******************************************************************************/
 package io.openliberty.checkpoint.fat;
 
+import static io.openliberty.checkpoint.fat.FATSuite.configureEnvVariable;
 import static io.openliberty.checkpoint.fat.FATSuite.getTestMethod;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,9 +50,6 @@ public class MPConfigTest extends FATServletClient {
 
     public TestMethod testMethod;
 
-    private static final Properties serverEnvProperties = new Properties();
-    private static File serverEnvFile;
-
     @BeforeClass
     public static void copyAppToDropins() throws Exception {
         ShrinkHelper.defaultApp(server, APP_NAME, APP_NAME);
@@ -76,32 +72,22 @@ public class MPConfigTest extends FATServletClient {
     }
 
     private void configureBeforeCheckpoint() throws Exception {
+        Log.info(getClass(), testName.getMethodName(), "configureBeforeCheckpoint: " + testMethod);
         switch (testMethod) {
             case envValueChangeTest:
-                configureEnvVariable("req_scope_key", "envValue");
+                configureEnvVariable(server, singletonMap("req_scope_key", "envValue"));
                 break;
             case appScopeEnvValueChangeTest:
-                configureEnvVariable("app_scope_key", "envValue");
+                configureEnvVariable(server, singletonMap("app_scope_key", "envValue"));
                 break;
             case configObjectAppScopeEnvValueChangeTest:
-                configureEnvVariable("config_object_app_scope_key", "envValue");
+                configureEnvVariable(server, singletonMap("config_object_app_scope_key", "envValue"));
                 break;
             case configObjectPropertiesAppScopeEnvValueChangeTest:
-                configureEnvVariable("config_object_properties_app_scope_key", "envValue");
+                configureEnvVariable(server, singletonMap("config_object_properties_app_scope_key", "envValue"));
                 break;
             default:
                 break;
-        }
-    }
-
-    private void configureEnvVariable(String key, String value) throws Exception {
-        serverEnvProperties.clear();
-        if (key != null && value != null) {
-            serverEnvProperties.put(key, value);
-        }
-        serverEnvFile = new File(server.getFileFromLibertyServerRoot("server.env").getAbsolutePath());
-        try (OutputStream out = new FileOutputStream(serverEnvFile)) {
-            serverEnvProperties.store(out, "");
         }
     }
 
@@ -112,7 +98,7 @@ public class MPConfigTest extends FATServletClient {
             switch (testMethod) {
                 // MPConfigBean bean
                 case envValueTest:
-                    configureEnvVariable("req_scope_key", "envValue");
+                    configureEnvVariable(server, singletonMap("req_scope_key", "envValue"));
                     break;
                 case serverValueTest:
                     updateVariableConfig("req_scope_key", "serverValue");
@@ -121,12 +107,12 @@ public class MPConfigTest extends FATServletClient {
                     removeVariableConfig("req_scope_key");
                     break;
                 case envValueChangeTest:
-                    configureEnvVariable("req_scope_key", "envValueChange");
+                    configureEnvVariable(server, singletonMap("req_scope_key", "envValueChange"));
                     break;
 
                 // MPConfigBeanWithApplicationScope bean
                 case appScopeEnvValueTest:
-                    configureEnvVariable("app_scope_key", "envValue");
+                    configureEnvVariable(server, singletonMap("app_scope_key", "envValue"));
                     break;
                 case appScopeServerValueTest:
                     updateVariableConfig("app_scope_key", "serverValue");
@@ -135,12 +121,12 @@ public class MPConfigTest extends FATServletClient {
                     removeVariableConfig("app_scope_key");
                     break;
                 case appScopeEnvValueChangeTest:
-                    configureEnvVariable("app_scope_key", "envValueChange");
+                    configureEnvVariable(server, singletonMap("app_scope_key", "envValueChange"));
                     break;
 
                 // ApplicationScopedOnCheckpointBeanWithConfigObject bean
                 case configObjectAppScopeEnvValueTest:
-                    configureEnvVariable("config_object_app_scope_key", "envValue");
+                    configureEnvVariable(server, singletonMap("config_object_app_scope_key", "envValue"));
                     break;
                 case configObjectAppScopeServerValueTest:
                     updateVariableConfig("config_object_app_scope_key", "serverValue");
@@ -149,18 +135,18 @@ public class MPConfigTest extends FATServletClient {
                     removeVariableConfig("config_object_app_scope_key");
                     break;
                 case configObjectAppScopeEnvValueChangeTest:
-                    configureEnvVariable("config_object_app_scope_key", "envValueChange");
+                    configureEnvVariable(server, singletonMap("config_object_app_scope_key", "envValueChange"));
                     break;
 
                 // ApplicationScopedOnCheckpointBeanWithConfigObjectProperties bean
                 case configObjectPropertiesAppScopeEnvValueTest:
-                    configureEnvVariable("config_object_properties_app_scope_key", "envValue");
+                    configureEnvVariable(server, singletonMap("config_object_properties_app_scope_key", "envValue"));
                     break;
                 case configObjectPropertiesAppScopeServerValueTest:
                     updateVariableConfig("config_object_properties_app_scope_key", "serverValue");
                     break;
                 case configObjectPropertiesAppScopeEnvValueChangeTest:
-                    configureEnvVariable("config_object_properties_app_scope_key", "envValueChange");
+                    configureEnvVariable(server, singletonMap("config_object_properties_app_scope_key", "envValueChange"));
                     break;
 
                 // ApplicationScopedOnCheckpointBean bean
@@ -208,73 +194,76 @@ public class MPConfigTest extends FATServletClient {
     }
 
     private void checkForLogsAndStopServer() throws Exception {
-        switch (testMethod) {
-            // MPConfigBean bean
-            case envValueTest:
-            case serverValueTest:
-            case annoValueTest:
-            case envValueChangeTest:
-                assertNull("CWWKC0651W message not expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*"));
+        Log.info(getClass(), testName.getMethodName(), "checkForLogsAndStopServer: " + testMethod);
+        String expectedWarning = null;
+        try {
+            switch (testMethod) {
+                // MPConfigBean bean
+                case envValueTest:
+                case serverValueTest:
+                case annoValueTest:
+                case envValueChangeTest:
+                    assertNull("CWWKC0651W message not expected in logs", server.waitForStringInLog("CWWKC0651W:.*", 100));
+                    break;
+
+                // MPConfigBeanWithApplicationScope bean
+                case appScopeEnvValueTest:
+                case appScopeServerValueTest:
+                case appScopeAnnoValueTest:
+                case appScopeEnvValueChangeTest:
+                    assertNull("CWWKC0651W message not expected in logs", server.waitForStringInLog("CWWKC0651W:.*", 100));
+                    break;
+
+                //ApplicationScopedOnCheckpointBeanWithConfigObject bean
+                case configObjectAppScopeEnvValueTest:
+                case configObjectAppScopeServerValueTest:
+                case configObjectAppScopeAnnoValueTest:
+                case configObjectAppScopeEnvValueChangeTest:
+                    assertNotNull("CWWKC0651W message expected in logs", server.waitForStringInLog("CWWKC0651W:.*config_object_app_scope_key*", 100));
+                    expectedWarning = "CWWKC0651W";
+                    break;
+
+                // ApplicationScopedOnCheckpointBeanWithConfigObjectProperties bean
+                case configObjectPropertiesAppScopeEnvValueTest:
+                case configObjectPropertiesAppScopeServerValueTest:
+                case configObjectPropertiesAppScopeEnvValueChangeTest:
+                    assertNotNull("CWWKC0651W message expected in logs", server.waitForStringInLog("CWWKC0651W:.*config_object_properties_app_scope_key*", 100));
+                    expectedWarning = "CWWKC0651W";
+                    break;
+
+                // ApplicationScopedOnCheckpointBean bean
+                case applicationScopedValueTest:
+                    assertNotNull("CWWKC0651W message expected in logs", server.waitForStringInLog("CWWKC0651W:.*early_access_app_scope_key*", 100));
+                    expectedWarning = "CWWKC0651W";
+                    break;
+
+                // Default tests in all beans
+                case defaultValueTest:
+                case appScopeDefaultValueTest:
+                case configObjectAppScopeDefaultValueTest:
+                case configObjectPropertiesAppScopeDefaultValueTest:
+                    assertNull("CWWKC0651W message not expected in logs", server.waitForStringInLog("CWWKC0651W:.*", 100));
+                    break;
+                default:
+                    break;
+            }
+        } finally {
+            if (expectedWarning != null) {
+                server.stopServer(expectedWarning);
+            } else {
                 server.stopServer();
-                break;
-
-            // MPConfigBeanWithApplicationScope bean
-            case appScopeEnvValueTest:
-            case appScopeServerValueTest:
-            case appScopeAnnoValueTest:
-            case appScopeEnvValueChangeTest:
-                assertNull("CWWKC0651W message not expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*"));
-                server.stopServer();
-                break;
-
-            //ApplicationScopedOnCheckpointBeanWithConfigObject bean
-            case configObjectAppScopeEnvValueTest:
-            case configObjectAppScopeServerValueTest:
-            case configObjectAppScopeAnnoValueTest:
-            case configObjectAppScopeEnvValueChangeTest:
-                assertNotNull("CWWKC0651W message expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*config_object_app_scope_key*"));
-                server.stopServer("CWWKC0651W");
-                break;
-
-            // ApplicationScopedOnCheckpointBeanWithConfigObjectProperties bean
-            case configObjectPropertiesAppScopeEnvValueTest:
-            case configObjectPropertiesAppScopeServerValueTest:
-            case configObjectPropertiesAppScopeEnvValueChangeTest:
-                assertNotNull("CWWKC0651W message expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*config_object_properties_app_scope_key*"));
-                server.stopServer("CWWKC0651W");
-                break;
-
-            // ApplicationScopedOnCheckpointBean bean
-            case applicationScopedValueTest:
-                assertNotNull("CWWKC0651W message expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*early_access_app_scope_key*"));
-                server.stopServer("CWWKC0651W");
-                break;
-
-            // Default tests in all beans
-            case defaultValueTest:
-            case appScopeDefaultValueTest:
-            case configObjectAppScopeDefaultValueTest:
-            case configObjectPropertiesAppScopeDefaultValueTest:
-                assertNull("CWWKC0651W message not expected in logs", server
-                                .waitForStringInLog("CWWKC0651W:.*"));
-                server.stopServer();
-                break;
-            default:
-                server.stopServer();
-                break;
+            }
         }
     }
 
     @After
     public void tearDown() throws Exception {
-        checkForLogsAndStopServer();
-        server.restoreServerConfiguration();
-        configureEnvVariable(null, null);
+        try {
+            checkForLogsAndStopServer();
+        } finally {
+            server.restoreServerConfiguration();
+            configureEnvVariable(server, emptyMap());
+        }
     }
 
     static enum TestMethod {

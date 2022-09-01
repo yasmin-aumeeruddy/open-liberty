@@ -31,7 +31,6 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.ibm.websphere.simplicity.RemoteFile;
 import com.ibm.websphere.simplicity.log.Log;
 
-import componenttest.containers.TestContainerSuite;
 import componenttest.custom.junit.runner.AlwaysPassesTest;
 import componenttest.topology.impl.LibertyFileManager;
 import componenttest.topology.impl.LibertyServer;
@@ -51,9 +50,10 @@ import componenttest.topology.impl.LibertyServer;
                 MPFaultToleranceTimeoutTest.class,
                 ValidFeaturesTest.class,
                 RESTclientTest.class,
-                DB2Test.class
+                JNDITest.class,
+                CRIULogLevelTest.class
 })
-public class FATSuite extends TestContainerSuite {
+public class FATSuite {
     public static void copyAppsAppToDropins(LibertyServer server, String appName) throws Exception {
         RemoteFile appFile = server.getFileFromLibertyServerRoot("apps/" + appName + ".war");
         LibertyFileManager.createRemoteFile(server.getMachine(), server.getServerRoot() + "/dropins").mkdir();
@@ -80,7 +80,9 @@ public class FATSuite extends TestContainerSuite {
     static public <T extends Enum<T>> T getTestMethod(Class<T> type, TestName testName) {
         String simpleName = getTestMethodNameOnly(testName);
         try {
-            return Enum.valueOf(type, simpleName);
+            T t = Enum.valueOf(type, simpleName);
+            Log.info(FATSuite.class, testName.getMethodName(), "got test method: " + t);
+            return t;
         } catch (IllegalArgumentException e) {
             Log.info(type, simpleName, "No configuration enum: " + testName);
             fail("Unknown test name: " + testName);
@@ -99,6 +101,15 @@ public class FATSuite extends TestContainerSuite {
         bootStrapProperties.putAll(properties);
         try (OutputStream out = new FileOutputStream(bootStrapPropertiesFile)) {
             bootStrapProperties.store(out, "");
+        }
+    }
+
+    static void configureEnvVariable(LibertyServer server, Map<String, String> newEnv) throws Exception {
+        Properties serverEnvProperties = new Properties();
+        serverEnvProperties.putAll(newEnv);
+        File serverEnvFile = new File(server.getFileFromLibertyServerRoot("server.env").getAbsolutePath());
+        try (OutputStream out = new FileOutputStream(serverEnvFile)) {
+            serverEnvProperties.store(out, "");
         }
     }
 }
