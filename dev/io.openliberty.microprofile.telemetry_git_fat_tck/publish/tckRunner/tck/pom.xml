@@ -88,14 +88,14 @@
             <groupId>org.eclipse.microprofile.telemetry.tracing</groupId>
             <artifactId>microprofile-telemetry-tracing-tck</artifactId>
             <version>${tck.version}</version>
-        </dependency>
+        </dependency><!---
         <dependency>
             <groupId>org.eclipse.microprofile.telemetry</groupId>
             <artifactId>microprofile-telemetry-api</artifactId>
             <version>${api.version}</version>
             <scope>system</scope>
             <systemPath>${io.openliberty.org.eclipse.microprofile.telemetry}</systemPath>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.eclipse.microprofile</groupId>
             <artifactId>microprofile</artifactId>

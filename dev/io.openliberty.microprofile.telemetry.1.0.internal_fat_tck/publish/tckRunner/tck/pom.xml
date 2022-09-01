@@ -60,12 +60,14 @@
         <dependency>
             <groupId>org.eclipse.microprofile.telemetry.tracing</groupId>
             <artifactId>microprofile-telemetry-tracing-tck</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>/Users/yasmin/Documents/open-liberty/dev/io.openliberty.microprofile.telemetry.1.0.internal_fat_tck/publish/tckRunner/tck/src/main/resources/microprofile-telemetry-tracing-tck-1.0-SNAPSHOT.jar</systemPath>
+            <version>1.0-RC2</version>
         </dependency>
 
-        <dependency>
+            <!--<type>test-jar</type>
+            <scope>system</scope>
+            <systemPath>/Users/yasmin/Documents/open-liberty/dev/io.openliberty.microprofile.telemetry.1.0.internal_fat_tck/publish/tckRunner/tck/src/main/resources/microprofile-telemetry-tracing-tck-1.0\-SNAPSHOT.jar</systemPath>
+            -->
+      <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
             <version>1.14.0</version>
@@ -118,7 +120,12 @@
             <artifactId>microprofile-config-api</artifactId>
             <version>3.0.1</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.openliberty.smallrye</groupId>
             <artifactId>common</artifactId>

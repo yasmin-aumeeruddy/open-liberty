@@ -11,7 +11,7 @@
 task clone {
   mustRunAfter cleanFat
   doLast{
-    gitCloneTemp "microprofile-telemetry"
+    gitClone "microprofile-telemetry"
   }
 }
 addRequiredLibraries.dependsOn clone
