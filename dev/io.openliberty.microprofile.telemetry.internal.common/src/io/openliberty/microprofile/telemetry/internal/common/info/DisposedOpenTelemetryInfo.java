@@ -16,6 +16,7 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 
 /**
@@ -68,5 +69,11 @@ public class DisposedOpenTelemetryInfo implements OpenTelemetryInfo {
 
             Tr.event(tc, "OpenTelemetryInfoFactory", "The stack that led to OpenTelemetryInfoFactory being called after " + appName + " has shutdown is:.", stackStream.toString());
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Meter getMeter() {
+        return OpenTelemetry.noop().getMeterProvider().get("");
     }
 }

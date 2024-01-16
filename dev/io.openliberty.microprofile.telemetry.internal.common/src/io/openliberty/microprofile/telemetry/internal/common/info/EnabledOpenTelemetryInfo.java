@@ -21,6 +21,7 @@ import com.ibm.websphere.ras.TraceComponent;
 
 import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -39,6 +40,7 @@ public class EnabledOpenTelemetryInfo implements OpenTelemetryInfo {
     private final boolean enabled;
     private final OpenTelemetry openTelemetry;
     private final Tracer tracer;
+    private final Meter meter;
 
     /**
      * @param enabled true if enabled, otherwise false
@@ -50,6 +52,7 @@ public class EnabledOpenTelemetryInfo implements OpenTelemetryInfo {
         this.enabled = enabled;
         this.openTelemetry = openTelemetry;
         tracer = openTelemetry.getTracer(INSTRUMENTATION_NAME);
+        meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
     }
 
     /**
@@ -103,7 +106,7 @@ public class EnabledOpenTelemetryInfo implements OpenTelemetryInfo {
                     results.add(loggerProvider.shutdown());
                 }
 
-                //This line is just so the thread waits for the previous shutdown() calls to complete, 
+                //This line is just so the thread waits for the previous shutdown() calls to complete,
                 //or 10 seconds, whichever comes first. No exception will be thrown.
                 CompletableResultCode.ofAll(results).join(10, TimeUnit.SECONDS);
             }
@@ -111,6 +114,13 @@ public class EnabledOpenTelemetryInfo implements OpenTelemetryInfo {
             Tr.error(tc, Tr.formatMessage(tc, "CWMOT5002.telemetry.error", e));
         }
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Meter getMeter() {
+        // TODO Auto-generated method stub
+        return meter;
     }
 
 }

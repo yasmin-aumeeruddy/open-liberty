@@ -12,17 +12,23 @@
  *******************************************************************************/
 package io.openliberty.microprofile.telemetry.internal.common.cdi;
 
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Produces;
+
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.ws.kernel.service.util.ServiceCaller;
 import com.ibm.ws.runtime.metadata.ApplicationMetaData;
 import com.ibm.ws.threadContext.ComponentMetaDataAccessorImpl;
 
+import io.openliberty.microprofile.telemetry.internal.common.helpers.OSGIHelpers;
 import io.openliberty.microprofile.telemetry.internal.common.info.ErrorOpenTelemetryInfo;
 import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfo;
 import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryInfoFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 
@@ -66,6 +72,17 @@ public class OpenTelemetryProducer {
     @Produces
     public Tracer getTracer() {
         return getOpenTelemetryInfo().getTracer();
+    }
+
+    /**
+     * Gets or creates a tracer instance from the TracerProvider for the OpenTelemetry instance associated with this application.
+     *
+     * @return An tracer instance from the instance of OpenTelemetry associated with this application. This instance will be a no-op if telemetry is disabled or the application has
+     *         shut down.
+     */
+    @Produces
+    public Meter getMeter() {
+        return getOpenTelemetryInfo().getMeter();
     }
 
     /**

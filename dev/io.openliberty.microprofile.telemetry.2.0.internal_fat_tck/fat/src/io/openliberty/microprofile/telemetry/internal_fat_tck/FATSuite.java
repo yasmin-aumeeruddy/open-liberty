@@ -18,10 +18,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import componenttest.annotation.MinimumJavaLevel;
 import componenttest.custom.junit.runner.AlwaysPassesTest;
-import componenttest.custom.junit.runner.RepeatTestFilter;
-import componenttest.rules.repeater.MicroProfileActions;
-import componenttest.rules.repeater.RepeatTests;
-import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
 
 @RunWith(Suite.class)
 @SuiteClasses({
@@ -31,8 +27,4 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
 @MinimumJavaLevel(javaLevel = 11)
 public class FATSuite {
 
-    public static RepeatTests aboveMP50Repeats(String serverName) {
-        return TelemetryActions
-            .repeat(serverName, MicroProfileActions.MP61, TelemetryActions.MP50_MPTEL11);
-    }
 }
