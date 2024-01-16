@@ -23,11 +23,9 @@ import componenttest.annotation.Server;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
-import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.tck.TCKResultsInfo.Type;
 import componenttest.topology.utils.tck.TCKRunner;
-import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
 
 /**
  * This is a test class that runs a whole Maven TCK as one test FAT test.
@@ -38,9 +36,6 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
 public class Telemetry20TCKLauncher {
 
     private static final String SERVER_NAME = "Telemetry20TCKServer";
-
-    //@ClassRule
-    //public static RepeatTests r = FATSuite.aboveMP50Repeats(SERVER_NAME);
 
     @Server(SERVER_NAME)
     public static LibertyServer server;
@@ -57,7 +52,7 @@ public class Telemetry20TCKLauncher {
 
     @Test
     @AllowedFFDC // The tested deployment exceptions cause FFDC so we have to allow for this.
-    public void launchTelemetry10Tck() throws Exception {
+    public void launchTelemetry20Tck() throws Exception {
         String bucketName = "io.openliberty.microprofile.telemetry.2.0.internal_fat_tck";
         String testName = this.getClass() + ":launchTelemetry20Tck";
         Type type = Type.MICROPROFILE;

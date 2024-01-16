@@ -69,6 +69,17 @@ public class OpenTelemetryProducer {
     }
 
     /**
+     * Gets or creates a tracer instance from the TracerProvider for the OpenTelemetry instance associated with this application.
+     *
+     * @return An tracer instance from the instance of OpenTelemetry associated with this application. This instance will be a no-op if telemetry is disabled or the application has
+     *         shut down.
+     */
+    @Produces
+    public Meter getMeter() {
+        return getOpenTelemetryInfo().getMeter();
+    }
+
+    /**
      * Acquires a proxy for Spans
      *
      * @return Returns a SpanProxy that will redirect all methods to the Span associated with the current context

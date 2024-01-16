@@ -10,6 +10,7 @@
 package io.openliberty.microprofile.telemetry.internal.common.info;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 
 /**
@@ -40,6 +41,12 @@ public class ErrorOpenTelemetryInfo implements OpenTelemetryInfo {
     public void dispose() {
         // No op
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Meter getMeter() {
+        return OpenTelemetry.noop().getMeter("");
     }
 
 }
