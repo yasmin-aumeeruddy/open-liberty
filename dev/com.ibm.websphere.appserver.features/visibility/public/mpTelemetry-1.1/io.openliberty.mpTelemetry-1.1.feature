@@ -12,6 +12,7 @@ IBM-API-Package: \
   io.opentelemetry.api;type="third-party",\
   io.opentelemetry.api.trace;type="third-party",\
   io.opentelemetry.api.common;type="third-party",\
+  io.opentelemetry.api.metrics;type="third-party",\
   io.opentelemetry.context;type="third-party",\
   io.opentelemetry.context.propagation;type="third-party",\
   io.opentelemetry.sdk.trace;type="third-party",\

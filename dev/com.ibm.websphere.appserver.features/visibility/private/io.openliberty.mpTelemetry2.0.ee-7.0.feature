@@ -12,7 +12,7 @@ singleton=true
   com.ibm.ws.cdi.interfaces, \
   io.openliberty.microprofile.telemetry.1.1.internal, \
   io.openliberty.io.opentelemetry.1.29, \
-  io.openliberty.microprofile.telemetry.internal.common
+  io.openliberty.microprofile.telemetry.internal.2.0.common
 kind=ga
 edition=core
 WLP-Activation-Type: parallel 
