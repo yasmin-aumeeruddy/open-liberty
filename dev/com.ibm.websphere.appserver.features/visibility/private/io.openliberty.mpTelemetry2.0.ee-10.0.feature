@@ -10,8 +10,8 @@ singleton=true
   com.ibm.websphere.appserver.eeCompatible-10.0
 -bundles=\
   com.ibm.ws.cdi.interfaces.jakarta, \
-  io.openliberty.microprofile.telemetry.1.1.internal.jakarta,\
-  io.openliberty.io.opentelemetry.1.29.jakarta,\
+  io.openliberty.microprofile.telemetry.2.0.internal.jakarta,\
+  io.openliberty.io.opentelemetry.2.0.jakarta,\
   io.openliberty.microprofile.telemetry.internal.2.0.common.jakarta
 kind=ga
 edition=core

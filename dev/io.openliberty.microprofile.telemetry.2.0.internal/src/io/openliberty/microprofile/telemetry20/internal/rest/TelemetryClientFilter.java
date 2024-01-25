@@ -35,11 +35,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 @Provider
 public class TelemetryClientFilter extends AbstractTelemetryClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -196,11 +196,6 @@ public class TelemetryClientFilter extends AbstractTelemetryClientFilter impleme
         @Override
         public Integer getServerPort(final ClientRequestContext request) {
             return request.getUri().getPort();
-        }
-
-        @Override
-        public String getTransport(ClientRequestContext request, ClientResponseContext response) {
-            return SemanticAttributes.NetTransportValues.IP_TCP;
         }
     }
 }

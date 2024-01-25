@@ -16,6 +16,7 @@ IBM-API-Package: \
   io.opentelemetry.context;type="third-party",\
   io.opentelemetry.context.propagation;type="third-party",\
   io.opentelemetry.extension.incubator.metrics;type="third-party",\
+  io.opentelemetry.internal.shaded.jctools.queues;type="third-party",\
   io.opentelemetry.sdk.trace;type="third-party",\
   io.opentelemetry.sdk.trace.export;type="third-party",\
   io.opentelemetry.sdk.trace.data;type="third-party",\
@@ -39,7 +40,7 @@ IBM-API-Package: \
   io.openliberty.org.jetbrains.kotlin,\
   io.openliberty.org.jetbrains.annotation,\
   io.openliberty.io.zipkin.zipkin2
--jars=io.openliberty.mpTelemetry.1.0.thirdparty; location:="dev/api/third-party/,lib/"
+-jars=io.openliberty.mpTelemetry.2.0.thirdparty; location:="dev/api/third-party/,lib/"
 kind=ga
 edition=core
 WLP-Activation-Type: parallel

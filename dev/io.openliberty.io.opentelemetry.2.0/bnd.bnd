@@ -52,7 +52,14 @@ Export-Package: \
   io.opentelemetry.exporter.zipkin.internal;version=${openTelemetryVersion};thread-context=true,\
   io.opentelemetry.sdk.autoconfigure.internal;version=${openTelemetryVersion};thread-context=true,\
   io.opentelemetry.instrumentation.*;version=${openTelemetryInstrumentationVersion},\
-  io.opentelemetry.internal.shaded.*;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.counters;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.maps;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.queues;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.queues.atomic;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.queues.unpadded;version=${openTelemetryVersion},\
+  io.opentelemetry.internal.shaded.jctools.util;version=${openTelemetryVersion},\
+  !io.opentelemetry.internal.shaded.*;version=${openTelemetryVersion},\
+  io.opentelemetry.api.common;version=${openTelemetryVersion},\
   io.opentelemetry.*;version=${openTelemetryVersion}
 
 Include-Resource: \
@@ -93,6 +100,7 @@ Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=11))"
 	io.opentelemetry:opentelemetry-exporter-sender-okhttp;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-exporter-zipkin;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-extension-trace-propagators;version='${openTelemetryVersion}';strategy=exact,\
+	io.opentelemetry:opentelemetry-extension-incubator;version='${alphaOpenTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-sdk;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-sdk-common;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi;version='${openTelemetryVersion}';strategy=exact,\

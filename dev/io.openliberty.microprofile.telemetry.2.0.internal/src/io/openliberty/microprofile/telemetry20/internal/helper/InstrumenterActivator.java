@@ -18,7 +18,7 @@ import org.osgi.framework.BundleContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+//import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 public class InstrumenterActivator implements BundleActivator {
     //The J2S exception occurs due to a call during the initialization of Instrumenter and InstrumenterBuilder
@@ -26,7 +26,7 @@ public class InstrumenterActivator implements BundleActivator {
     public void start(BundleContext ctx) throws Exception {
         Class.forName(Instrumenter.class.getName());
         Class.forName(InstrumenterBuilder.class.getName());
-        Class.forName(SemconvStability.class.getName());
+        // Class.forName(SemconvStability.class.getName());
         // Eagerly initialize context classes to avoid J2S exceptions
         Context.root();
     }

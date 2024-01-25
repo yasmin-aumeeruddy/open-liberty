@@ -43,11 +43,11 @@ import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryInfoFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.ResourceBuilder;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
 // We want this to start before CDI so the meta data slot is ready before anyone triggers the CDI producer.
 @Component(service = { ApplicationStateListener.class, OpenTelemetryInfoFactory.class }, property = { "service.vendor=IBM", "service.ranking:Integer=150" })
@@ -196,7 +196,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                 if (propertyName.startsWith("otel") || propertyName.startsWith("OTEL")) {
                     String normalizedName = propertyName.toLowerCase().replace('_', '.');
                     config.getOptionalValue(normalizedName, String.class)
-                        .ifPresent(value -> telemetryProperties.put(normalizedName, value));
+                          .ifPresent(value -> telemetryProperties.put(normalizedName, value));
                 }
             }
             //Metrics and logs are disabled by default
@@ -255,7 +255,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     //Adds the service name to the resource attributes
     private static Resource customizeResource(Resource resource, ConfigProperties c) {
         ResourceBuilder builder = resource.toBuilder();
-        builder.put(ResourceAttributes.SERVICE_NAME, getServiceName(c));
+        builder.put(AttributeKey.stringKey("service.name"), getServiceName(c));
         return builder.build();
     }
 
