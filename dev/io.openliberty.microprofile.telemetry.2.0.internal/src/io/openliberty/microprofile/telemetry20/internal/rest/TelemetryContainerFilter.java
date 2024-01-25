@@ -41,11 +41,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
+import io.opentelemetry.semconv.SemanticAttributes;
 
 @Provider
 public class TelemetryContainerFilter extends AbstractTelemetryContainerFilter implements ContainerRequestFilter, ContainerResponseFilter {
@@ -278,21 +278,6 @@ public class TelemetryContainerFilter extends AbstractTelemetryContainerFilter i
         public List<String> getHttpResponseHeader(final ContainerRequestContext request, final ContainerResponseContext response,
                                                   final String name) {
             return response.getStringHeaders().getOrDefault(name, emptyList());
-        }
-
-        @Override
-        public String getTransport(ContainerRequestContext request) {
-            return SemanticAttributes.NetTransportValues.IP_TCP;
-        }
-
-        @Override
-        public String getServerAddress(ContainerRequestContext request) {
-            return request.getUriInfo().getRequestUri().getHost();
-        }
-
-        @Override
-        public Integer getServerPort(ContainerRequestContext request) {
-            return request.getUriInfo().getRequestUri().getPort();
         }
     }
 }

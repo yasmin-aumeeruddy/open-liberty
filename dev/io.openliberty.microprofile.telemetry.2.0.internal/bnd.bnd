@@ -44,7 +44,7 @@ Service-Component: \
 # created for other API classes
 Import-Package: \
 	io.opentelemetry.api.common,\
-	io.openliberty.microprofile.telemetry.internal.common.resources;version="[2.0,3)",\
+	io.openliberty.microprofile.telemetry.internal.common.resources,\
 	javax.annotation;version="[1.2,2)",\
 	javax.enterprise.event;version="[2.0,3)",\
 	javax.enterprise.inject.spi;version="[2.0,3)",\
@@ -73,7 +73,7 @@ Import-Package: \
 	com.ibm.websphere.org.eclipse.microprofile.rest.client.1.1;version=latest,\
 	io.openliberty.org.jboss.resteasy.common;version=latest,\
 	io.openliberty.microprofile.telemetry.internal.2.0.common;version=latest,\
-	io.openliberty.io.opentelemetry.1.29;version=latest,\
+	io.openliberty.io.opentelemetry.2.0;version=latest,\
 	com.ibm.ws.kernel.boot.common;version=latest
 
 WS-TraceGroup: TELEMETRY

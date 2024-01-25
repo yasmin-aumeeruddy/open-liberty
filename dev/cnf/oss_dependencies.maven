@@ -162,6 +162,7 @@ io.opentelemetry:opentelemetry-exporter-zipkin:1.19.0
 io.opentelemetry:opentelemetry-exporter-zipkin:1.29.0
 io.opentelemetry:opentelemetry-exporter-zipkin:1.34.0
 io.opentelemetry:opentelemetry-extension-incubator:1.34.0
+io.opentelemetry:opentelemetry-extension-incubator:1.34.0-alpha
 io.opentelemetry:opentelemetry-extension-trace-propagators:1.19.0
 io.opentelemetry:opentelemetry-extension-trace-propagators:1.29.0
 io.opentelemetry:opentelemetry-extension-trace-propagators:1.34.0
