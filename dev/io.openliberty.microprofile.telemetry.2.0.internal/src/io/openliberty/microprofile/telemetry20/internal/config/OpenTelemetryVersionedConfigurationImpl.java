@@ -7,7 +7,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  *******************************************************************************/
-package io.openliberty.microprofile.telemetry11.internal.sdk;
+package io.openliberty.microprofile.telemetry20.internal.config;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -16,14 +19,25 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 
 /**
- * This class contains version specific API calls to AutoConfiguredOpenTelemetrySdk.builder()
+ * This class contains version specific configuration for OpenTelemetryInfoFactory
  */
 @Component
-public class OpenTelemetrySdkBuilderSupplierImpl implements OpenTelemetryInfoFactoryImpl.OpenTelemetrySdkBuilderSupplier {
+public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInfoFactoryImpl.OpenTelemetryVersionedConfiguration {
 
+    // Version specific API calls to AutoConfiguredOpenTelemetrySdk.builder()
     @Override
     public AutoConfiguredOpenTelemetrySdkBuilder getPartiallyConfiguredOpenTelemetrySDKBuilder() {
         return AutoConfiguredOpenTelemetrySdk.builder()
                         .disableShutdownHook();
+    }
+
+    // Version specific default properties
+    @Override
+    public Map<String, String> getTelemetryPropertyDefaults() {
+        Map<String, String> telemetryProperties = new HashMap<String, String>();
+        //Logs are disabled by default, metrics is not
+        telemetryProperties.put(OpenTelemetryInfoFactoryImpl.CONFIG_LOGS_EXPORTER_PROPERTY, "none");
+        telemetryProperties.put(OpenTelemetryInfoFactoryImpl.ENV_LOGS_EXPORTER_PROPERTY, "none");
+        return telemetryProperties;
     }
 }

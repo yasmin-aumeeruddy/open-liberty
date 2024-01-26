@@ -25,6 +25,6 @@ Private-Package: \
 
 -dsannotations: \
   io.openliberty.microprofile.telemetry11.internal.cdi.SPIMetaData,\
-  io.openliberty.microprofile.telemetry11.internal.sdk.OpenTelemetrySdkBuilderSupplierImpl,\
+  io.openliberty.microprofile.telemetry20.internal.config.OpenTelemetryVersionedConfigurationImpl,\
   io.openliberty.microprofile.telemetry11.internal.rest.TelemetryServletContainerInitializer,\
   io.openliberty.microprofile.telemetry11.internal.rest.javax.TelemetryJaxRsProviderRegister

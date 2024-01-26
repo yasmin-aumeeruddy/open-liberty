@@ -43,11 +43,11 @@ import io.openliberty.microprofile.telemetry.internal.common.AgentDetection;
 import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryInfoFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.ResourceBuilder;
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes;
 
 // We want this to start before CDI so the meta data slot is ready before anyone triggers the CDI producer.
 @Component(service = { ApplicationStateListener.class, OpenTelemetryInfoFactory.class }, property = { "service.vendor=IBM", "service.ranking:Integer=150" })
@@ -71,13 +71,13 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
      * To ensure threads do not get the wrong OpenTelemetryInfo from the application metadata, it is stored as an AtomicReference
      */
 
-    private static final String ENV_DISABLE_PROPERTY = "OTEL_SDK_DISABLED";
-    private static final String CONFIG_DISABLE_PROPERTY = "otel.sdk.disabled";
-    private static final String ENV_METRICS_EXPORTER_PROPERTY = "OTEL_METRICS_EXPORTER";
-    private static final String CONFIG_METRICS_EXPORTER_PROPERTY = "otel.metrics.exporter";
-    private static final String ENV_LOGS_EXPORTER_PROPERTY = "OTEL_LOGS_EXPORTER";
-    private static final String CONFIG_LOGS_EXPORTER_PROPERTY = "otel.logs.exporter";
-    private static final String SERVICE_NAME_PROPERTY = "otel.service.name";
+    public static final String ENV_DISABLE_PROPERTY = "OTEL_SDK_DISABLED";
+    public static final String CONFIG_DISABLE_PROPERTY = "otel.sdk.disabled";
+    public static final String ENV_METRICS_EXPORTER_PROPERTY = "OTEL_METRICS_EXPORTER";
+    public static final String CONFIG_METRICS_EXPORTER_PROPERTY = "otel.metrics.exporter";
+    public static final String ENV_LOGS_EXPORTER_PROPERTY = "OTEL_LOGS_EXPORTER";
+    public static final String CONFIG_LOGS_EXPORTER_PROPERTY = "otel.logs.exporter";
+    public static final String SERVICE_NAME_PROPERTY = "otel.service.name";
 
     private static final TraceComponent tc = Tr.register(OpenTelemetryInfoFactoryImpl.class);
 
@@ -87,7 +87,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     //We get a partially configued SDK Builder from OSGi becase we are in a static context
     //and do not know which version of mpTelemetry will be in use.
     @Reference
-    private OpenTelemetrySdkBuilderSupplier openTelemetrySdkBuilderSupplier;
+    private OpenTelemetryVersionedConfiguration openTelemetryVersionedConfiguration;
 
     @Activate
     public OpenTelemetryInfoFactoryImpl(@Reference MetaDataSlotService slotService) {
@@ -144,7 +144,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
-                    return openTelemetrySdkBuilderSupplier.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
+                    return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
                                                           .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
                                                           .setServiceClassLoader(Thread.currentThread().getContextClassLoader()).build().getOpenTelemetrySdk();
                 });
@@ -188,7 +188,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
         return true;
     }
 
-    private static HashMap<String, String> getTelemetryProperties() {
+    private HashMap<String, String> getTelemetryProperties() {
         try {
             Config config = ConfigProvider.getConfig();
             HashMap<String, String> telemetryProperties = new HashMap<>();
@@ -199,11 +199,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                         .ifPresent(value -> telemetryProperties.put(normalizedName, value));
                 }
             }
-            //Metrics and logs are disabled by default
-            telemetryProperties.put(CONFIG_METRICS_EXPORTER_PROPERTY, "none");
-            telemetryProperties.put(CONFIG_LOGS_EXPORTER_PROPERTY, "none");
-            telemetryProperties.put(ENV_METRICS_EXPORTER_PROPERTY, "none");
-            telemetryProperties.put(ENV_LOGS_EXPORTER_PROPERTY, "none");
+
+            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
             return telemetryProperties;
         } catch (Exception e) {
             Tr.error(tc, Tr.formatMessage(tc, "CWMOT5002.telemetry.error", e));
@@ -255,7 +252,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     //Adds the service name to the resource attributes
     private static Resource customizeResource(Resource resource, ConfigProperties c) {
         ResourceBuilder builder = resource.toBuilder();
-        builder.put(ResourceAttributes.SERVICE_NAME, getServiceName(c));
+        builder.put(AttributeKey.stringKey("service.name"), getServiceName(c));
         return builder.build();
     }
 
@@ -273,8 +270,9 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
     //Interfaces and private classes only relevent to this factory.
 
-    public interface OpenTelemetrySdkBuilderSupplier {
+    public interface OpenTelemetryVersionedConfiguration {
         public AutoConfiguredOpenTelemetrySdkBuilder getPartiallyConfiguredOpenTelemetrySDKBuilder();
+        public Map<String, String> getTelemetryPropertyDefaults();
     }
 
     /*
