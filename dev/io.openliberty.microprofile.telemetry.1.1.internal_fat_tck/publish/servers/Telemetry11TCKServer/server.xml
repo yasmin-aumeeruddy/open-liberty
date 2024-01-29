@@ -36,6 +36,7 @@
     <!-- Required by Awaitility -->
     <javaPermission className="java.lang.RuntimePermission" name="setDefaultUncaughtExceptionHandler" />
     <javaPermission className="java.lang.RuntimePermission" name="modifyThread" />
+    <javaPermission className="java.lang.management.ManagementPermission" name="monitor"/>
     
     <!-- Required by Tests -->
     <!-- Test makes requests to localhost using HttpUrlConnection -->
