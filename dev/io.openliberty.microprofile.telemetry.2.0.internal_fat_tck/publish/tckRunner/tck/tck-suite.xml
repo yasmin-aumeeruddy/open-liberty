@@ -14,7 +14,7 @@
 
     <test name="tck-package-org.eclipse.microprofile.telemetry.metrics.tck">
         <packages>
-            <package name="org.eclipse.microprofile.telemetry.metrics.tck.*"></package>
+            <package name="org.eclipse.microprofile.telemetry.metrics.*"></package>
         </packages>
     </test>
 </suite>
