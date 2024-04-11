@@ -34,7 +34,6 @@ public class TelemetryActions {
     public static final String MP50_MPTEL20_ID = JakartaEEAction.EE9_ACTION_ID + "_MPTEL20_MicroProfile_50";
     public static final String MP60_MPTEL20_ID = JakartaEEAction.EE10_ACTION_ID + "MPTEL20_MicroProfile_60";
     public static final String MP61_MPTEL20_ID = JakartaEEAction.EE10_ACTION_ID + "_MPTEL20_MicroProfile_61";
-
     public static final FeatureSet MP14_MPTEL11 = MicroProfileActions.MP14
                     .addFeature("mpTelemetry-1.1")
                     .build(MP14_MPTEL11_ID);
