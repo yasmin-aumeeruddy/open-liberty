@@ -152,7 +152,8 @@ public class TelemetryMisconfigTest extends FATServletClient {
 
     @Test
     @ExpectedFFDC(repeatAction = MicroProfileActions.MP60_ID, value = { "java.lang.IllegalArgumentException" })
-    @ExpectedFFDC(repeatAction = { MicroProfileActions.MP61_ID, MicroProfileActions.MP50_ID, MicroProfileActions.MP41_ID, MicroProfileActions.MP14_ID },
+    @ExpectedFFDC(repeatAction = { MicroProfileActions.MP61_ID, MicroProfileActions.MP50_ID, MicroProfileActions.MP41_ID, MicroProfileActions.MP14_ID, TelemetryActions.MP14_MPTEL20_ID, 
+                                    TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID},
                   value = { "io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException" })
     public void testInvalidZipkinExporterEndpoint() throws Exception {
         deployAndWaitForApp(invalidZipkinEndpointApp, INVALID_ZIPKIN_ENDPOINT_APP_NAME);

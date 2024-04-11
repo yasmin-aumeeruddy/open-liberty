@@ -25,7 +25,7 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
                 ClientWithNoCdi.class,
                 JaxRsIntegration.class,
                 JaxRsIntegrationWithConcurrency.class,
-                ReactiveMessageThatTriggersClientTest.class,
+                ReactiveMessageThatTriggersClientTest.class,*/
                 Telemetry10.class,
                 TelemetryAloneTest.class,
                 TelemetryBeanTest.class,
@@ -66,7 +66,7 @@ public class FATSuite {
     public static String getTelemetryVersionUnderTest() {
         if (RepeatTestFilter.isRepeatActionActive(MicroProfileActions.MP60_ID)) {
             return "1.0";
-        } else if (RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP61_MPTEL20_ID)) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP60_MPTEL20_ID) ||  RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP41_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP14_MPTEL20_ID){
+        } else if (RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP61_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP60_MPTEL20_ID) ||  RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP41_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP14_MPTEL20_ID)){
             return "2.0";
         } else{
             return "1.1";

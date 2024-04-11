@@ -18,17 +18,22 @@ import componenttest.rules.repeater.MicroProfileActions;
 import componenttest.rules.repeater.FeatureReplacementAction;
 import componenttest.rules.repeater.RepeatActions;
 import componenttest.rules.repeater.RepeatTests;
+import componenttest.rules.repeater.EE7FeatureReplacementAction;
+import componenttest.rules.repeater.EE8FeatureReplacementAction;
+import componenttest.rules.repeater.JakartaEEAction;
+
 
 public class TelemetryActions {
     public static final String MP14_MPTEL11_ID = MicroProfileActions.MP14_ID + "_MPTEL11";
     public static final String MP41_MPTEL11_ID = MicroProfileActions.MP41_ID + "_MPTEL11";
     public static final String MP50_MPTEL11_ID = MicroProfileActions.MP50_ID + "_MPTEL11";
 
-    public static final String MP14_MPTEL20_ID = MicroProfileActions.MP14_ID + "_MPTEL20";
-    public static final String MP41_MPTEL20_ID = MicroProfileActions.MP41_ID + "_MPTEL20";
-    public static final String MP50_MPTEL20_ID = MicroProfileActions.MP50_ID + "_MPTEL20";
-    public static final String MP60_MPTEL20_ID = MicroProfileActions.MP60_ID + "_MPTEL20";
-    public static final String MP61_MPTEL20_ID = MicroProfileActions.MP61_ID + "_MPTEL20";
+    //Telemetry 2.0 repeats should not start with "MicroProfile_xx" as RepeatTestFilter uses startsWith() which makes them indisinguishable to mpTelemetry-1.1 in tests
+    public static final String MP14_MPTEL20_ID = EE7FeatureReplacementAction.ID + "_MPTEL20_MicroProfile_14"; 
+    public static final String MP41_MPTEL20_ID = EE8FeatureReplacementAction.ID + "_MPTEL20_MicroProfile_41";
+    public static final String MP50_MPTEL20_ID = JakartaEEAction.EE9_ACTION_ID + "_MPTEL20_MicroProfile_50";
+    public static final String MP60_MPTEL20_ID = JakartaEEAction.EE10_ACTION_ID + "MPTEL20_MicroProfile_60";
+    public static final String MP61_MPTEL20_ID = JakartaEEAction.EE10_ACTION_ID + "_MPTEL20_MicroProfile_61";
 
     public static final FeatureSet MP14_MPTEL11 = MicroProfileActions.MP14
                     .addFeature("mpTelemetry-1.1")
