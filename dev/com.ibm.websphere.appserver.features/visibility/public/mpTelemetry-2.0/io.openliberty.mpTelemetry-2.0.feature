@@ -30,7 +30,8 @@ IBM-API-Package: \
   io.opentelemetry.sdk.autoconfigure.spi;type="third-party",\
   io.opentelemetry.semconv;type="third-party",\
   io.opentelemetry.sdk.resources;type="third-party",\
-  io.opentelemetry.instrumentation.annotations;type="third-party"
+  io.opentelemetry.instrumentation.annotations;type="third-party",\
+  io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;type="third-party"
 -features=\
   io.openliberty.mpTelemetry2.0.ee-10.0; ibm.tolerates:= "9.0, 8.0, 7.0"
 -bundles=\

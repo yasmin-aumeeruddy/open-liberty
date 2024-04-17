@@ -40,6 +40,7 @@ import componenttest.annotation.Server;
 import componenttest.containers.SimpleLogConsumer;
 import componenttest.custom.junit.runner.FATRunner;
 import componenttest.custom.junit.runner.RepeatTestFilter;
+import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
 import componenttest.rules.repeater.MicroProfileActions;
 import componenttest.rules.repeater.RepeatTests;
 import componenttest.topology.impl.LibertyServer;
@@ -52,6 +53,8 @@ import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinQueryCl
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpan;
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpanMatcher;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+import io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
+import io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
 
 /**
  * Test exporting traces to a Zipkin server
@@ -106,10 +109,17 @@ public class ZipkinTest {
         Log.info(c, "testBasic", "Spans returned: " + spans);
 
         ZipkinSpan span = spans.get(0);
-
-        assertThat(span, span().withTraceId(traceId)
-                               .withTag(SemanticAttributes.HTTP_ROUTE.getKey(), "/spanTest/")
-                               .withTag(SemanticAttributes.HTTP_METHOD.getKey(), "GET"));
+        if (RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP14_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP41_MPTEL20_ID)|| RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP60_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP61_MPTEL20_ID) ){
+            assertThat(span, span().withTraceId(traceId)
+                                .withTag(HTTP_ROUTE.getKey(), "/spanTest/")
+                                .withTag(HTTP_REQUEST_METHOD.getKey(), "GET"));
+        }
+        else{
+            assertThat(span, span().withTraceId(traceId)
+                                .withTag(SemanticAttributes.HTTP_ROUTE.getKey(), "/spanTest/")
+                                .withTag(SemanticAttributes.HTTP_METHOD.getKey(), "GET"));
+        }
+        
     }
 
     @Test

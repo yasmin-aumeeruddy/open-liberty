@@ -92,6 +92,7 @@ Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=11))"
 	io.opentelemetry.instrumentation:opentelemetry-instrumentation-api;version='${openTelemetryInstrumentationVersion}';strategy=exact,\
 	io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator;version='${alphaOpenTelemetryInstrumentationVersion}';strategy=exact,\
 	io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv;version='1.32.0.alpha';strategy=exact,\
+	io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0;version='${alphaOpenTelemetryInstrumentationVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-api;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-api-events;version='${alphaOpenTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-context;version='${openTelemetryVersion}';strategy=exact,\
