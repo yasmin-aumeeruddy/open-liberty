@@ -7,7 +7,8 @@ singleton=true
   com.ibm.websphere.appserver.cdi-1.2, \
   io.openliberty.mpCompatible-0.0, \
   com.ibm.websphere.appserver.jaxrs-2.0, \
-  com.ibm.websphere.appserver.eeCompatible-7.0
+  com.ibm.websphere.appserver.eeCompatible-7.0,\
+  com.ibm.websphere.appserver.internal.slf4j-1.7
 -bundles=\
   com.ibm.ws.cdi.interfaces, \
   io.openliberty.microprofile.telemetry.2.0.internal, \

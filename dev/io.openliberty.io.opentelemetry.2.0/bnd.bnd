@@ -61,7 +61,10 @@ Export-Package: \
   !io.opentelemetry.internal.shaded.*;version=${openTelemetryVersion},\
   io.opentelemetry.api.common;version=${openTelemetryVersion},\
   io.opentelemetry.instrumentation.api.instrumenter.util;version=${openTelemetryVersion};thread-context=true,\
-  io.opentelemetry.*;version=${openTelemetryVersion}
+  io.opentelemetry.instrumentation.logback.appender.v1_0;version=${openTelemetryVersion},\
+  io.opentelemetry.*;version=${openTelemetryVersion},\
+  ch.qos.logback.*,\
+  org.slf4j.*
 
 Include-Resource: \
  META-INF=resources/META-INF
@@ -117,6 +120,9 @@ Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=11))"
 	com.ibm.websphere.appserver.spi.logging;version=latest,\
 	com.ibm.ws.org.osgi.annotation.versioning;version=latest,\
 	com.ibm.websphere.javaee.interceptor.1.2;version=latest,\
-	com.ibm.websphere.javaee.cdi.1.2
+	com.ibm.websphere.javaee.cdi.1.2;version=latest,\
+	ch.qos.logback:logback-core;version=1.2.3,\
+	ch.qos.logback:logback-classic;version=1.2.3,\
+	com.ibm.ws.org.slf4j.api
 
 WS-TraceGroup: TELEMETRY

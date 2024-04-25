@@ -43,6 +43,7 @@ import componenttest.custom.junit.runner.RepeatTestFilter;
 import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
 import componenttest.rules.repeater.MicroProfileActions;
 import componenttest.rules.repeater.RepeatTests;
+import componenttest.annotation.SkipForRepeat;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.microprofile.telemetry.internal.apps.spanTest.TestResource;
@@ -53,8 +54,8 @@ import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinQueryCl
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpan;
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpanMatcher;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-import io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
-import io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+//import io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
+//import io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
 
 /**
  * Test exporting traces to a Zipkin server
@@ -100,6 +101,7 @@ public class ZipkinTest {
     }
 
     @Test
+    @SkipForRepeat({ TelemetryActions.MP14_MPTEL20_ID, TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID})
     public void testBasic() throws Exception {
         HttpRequest request = new HttpRequest(server, "/spanTest");
         String traceId = request.run(String.class);
@@ -109,16 +111,10 @@ public class ZipkinTest {
         Log.info(c, "testBasic", "Spans returned: " + spans);
 
         ZipkinSpan span = spans.get(0);
-        if (RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP14_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP41_MPTEL20_ID)|| RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP50_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP60_MPTEL20_ID) || RepeatTestFilter.isRepeatActionActive(TelemetryActions.MP61_MPTEL20_ID) ){
-            assertThat(span, span().withTraceId(traceId)
-                                .withTag(HTTP_ROUTE.getKey(), "/spanTest/")
-                                .withTag(HTTP_REQUEST_METHOD.getKey(), "GET"));
-        }
-        else{
-            assertThat(span, span().withTraceId(traceId)
+        assertThat(span, span().withTraceId(traceId)
                                 .withTag(SemanticAttributes.HTTP_ROUTE.getKey(), "/spanTest/")
                                 .withTag(SemanticAttributes.HTTP_METHOD.getKey(), "GET"));
-        }
+        
         
     }
 

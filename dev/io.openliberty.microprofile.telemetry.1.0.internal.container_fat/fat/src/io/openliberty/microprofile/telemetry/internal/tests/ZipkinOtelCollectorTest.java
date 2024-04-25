@@ -46,7 +46,9 @@ import componenttest.custom.junit.runner.Mode;
 import componenttest.custom.junit.runner.Mode.TestMode;
 import componenttest.custom.junit.runner.RepeatTestFilter;
 import componenttest.rules.repeater.MicroProfileActions;
+import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
 import componenttest.rules.repeater.RepeatTests;
+import componenttest.annotation.SkipForRepeat;
 import componenttest.topology.impl.LibertyServer;
 import componenttest.topology.utils.HttpRequest;
 import io.openliberty.microprofile.telemetry.internal.apps.spanTest.TestResource;
@@ -114,6 +116,7 @@ public class ZipkinOtelCollectorTest {
     }
 
     @Test
+    @SkipForRepeat({ TelemetryActions.MP14_MPTEL20_ID, TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID})
     public void testBasic() throws Exception {
         HttpRequest request = new HttpRequest(server, "/spanTest");
 

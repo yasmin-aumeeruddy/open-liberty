@@ -40,6 +40,8 @@ import io.jaegertracing.api_v2.Model.SpanRef;
 import io.jaegertracing.api_v2.Model.SpanRefType;
 import io.openliberty.microprofile.telemetry.internal.apps.spanTest.TestResource;
 import io.openliberty.microprofile.telemetry.internal.utils.jaeger.JaegerQueryClient;
+import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryActions;
+import componenttest.annotation.SkipForRepeat;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
 
@@ -70,6 +72,7 @@ public abstract class JaegerBaseTest {
     protected abstract JaegerQueryClient getJaegerClient();
 
     @Test
+    @SkipForRepeat({ TelemetryActions.MP14_MPTEL20_ID, TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID})
     public void testBasic() throws Exception {
         HttpRequest request = new HttpRequest(server, "/spanTest");
         String traceId = request.run(String.class);

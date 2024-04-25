@@ -22,7 +22,7 @@
         <!-- Servlet required since we cannot use rest protocol because rest requests create spans which results in more spans than the tests expect -->
         <!-- See https://github.com/eclipse/microprofile-telemetry/issues/72 -->
         <feature>servlet-6.0</feature>
-        <feature>mpTelemetry-1.1</feature>
+        <feature>mpTelemetry-2.0</feature>
         <feature>concurrent-3.0</feature>
     </featureManager>
 
@@ -32,6 +32,7 @@
     <javaPermission className="java.util.PropertyPermission" name="*" actions="read" />
     <javaPermission className="java.lang.RuntimePermission" name="accessDeclaredMembers" />
     <javaPermission className="java.lang.RuntimePermission" name="accessClassInPackage.sun.reflect.annotation" />
+    <javaPermission className="java.lang.management.ManagementPermission" name="monitor" />
     
     <!-- Required by Awaitility -->
     <javaPermission className="java.lang.RuntimePermission" name="setDefaultUncaughtExceptionHandler" />
@@ -40,6 +41,8 @@
     <!-- Required by Tests -->
     <!-- Test makes requests to localhost using HttpUrlConnection -->
     <javaPermission className="java.net.URLPermission" name="http://localhost:*/-" actions="*" />
+
+    <javaPermission className="java.util.logging.LoggingPermission" name="control"/>
     
     <include location="../fatTestPorts.xml" />
 </server>

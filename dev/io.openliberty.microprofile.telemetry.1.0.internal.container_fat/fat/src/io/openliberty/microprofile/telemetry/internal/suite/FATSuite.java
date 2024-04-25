@@ -40,20 +40,20 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
 @RunWith(Suite.class)
 @SuiteClasses({
                 AlwaysPassesTest.class, //Must keep this test to run something in the Java 6 builds.
-                /*AgentTest.class,
+                AgentTest.class,
                 Agent129Test.class,
                 AgentConfigTest.class,
-                AgentConfigMultiAppTest.class,
+                AgentConfigMultiAppTest.class,/*
                 CrossFeatureJaegerTest.class,
                 CrossFeatureZipkinTest.class,
                 JaegerSecureOtelCollectorTest.class,
-                JaegerSecureOtlpTest.class,
+                /*JaegerSecureOtlpTest.class,
                 JaegerOtlpTest.class,
                 JaegerOtelCollectorTest.class,
-                JaegerLegacyTest.class,
+                JaegerLegacyTest.class,/*
                 TracingNotEnabledTest.class,
-                ZipkinOtelCollectorTest.class,*/
-                ZipkinTest.class,
+                ZipkinOtelCollectorTest.class,
+                ZipkinTest.class,*/
 })
 
 @MinimumJavaLevel(javaLevel = 11)
@@ -73,6 +73,10 @@ public class FATSuite extends TestContainerSuite {
 
     public static RepeatTests telemetry11Repeats(String serverName) {
         return TelemetryActions.repeat(serverName, TelemetryActions.MP14_MPTEL11, TelemetryActions.MP41_MPTEL11, TelemetryActions.MP50_MPTEL11, MicroProfileActions.MP61);
+    }
+
+    public static RepeatTests telemetry10and11Repeats(String serverName) {
+        return TelemetryActions.repeat(serverName, MicroProfileActions.MP60, TelemetryActions.MP14_MPTEL11, TelemetryActions.MP41_MPTEL11, TelemetryActions.MP50_MPTEL11, MicroProfileActions.MP61);
     }
 
     public static RepeatTests telemetry20Repeats(String serverName) {

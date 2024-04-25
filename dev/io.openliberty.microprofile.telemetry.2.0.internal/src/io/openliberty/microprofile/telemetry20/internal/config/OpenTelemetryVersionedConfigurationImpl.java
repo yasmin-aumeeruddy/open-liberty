@@ -37,8 +37,8 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
     public Map<String, String> getTelemetryPropertyDefaults() {
         Map<String, String> telemetryProperties = new HashMap<String, String>();
         //Logs are disabled by default, metrics is not
-        telemetryProperties.put(OpenTelemetryConstants.CONFIG_LOGS_EXPORTER_PROPERTY, "none");
-        telemetryProperties.put(OpenTelemetryConstants.ENV_LOGS_EXPORTER_PROPERTY, "none");
+        //telemetryProperties.put(OpenTelemetryConstants.CONFIG_LOGS_EXPORTER_PROPERTY, "none");
+        //telemetryProperties.put(OpenTelemetryConstants.ENV_LOGS_EXPORTER_PROPERTY, "none");
         return telemetryProperties;
     }
 }
