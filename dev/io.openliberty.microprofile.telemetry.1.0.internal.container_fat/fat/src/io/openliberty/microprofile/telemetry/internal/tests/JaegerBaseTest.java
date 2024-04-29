@@ -44,6 +44,9 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
 import componenttest.annotation.SkipForRepeat;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
+// MP Telemetry 2.0 does not consume io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
 
 /**
  * Base set of tests for exporting spans to Jaeger over any protocol
@@ -73,7 +76,7 @@ public abstract class JaegerBaseTest {
 
     @Test
     @SkipForRepeat({ TelemetryActions.MP14_MPTEL20_ID, TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID})
-    public void testBasic() throws Exception {
+    public void testBasicTelemetry1() throws Exception {
         HttpRequest request = new HttpRequest(server, "/spanTest");
         String traceId = request.run(String.class);
         Log.info(c, "testBasic", "TraceId is " + traceId);
@@ -86,6 +89,28 @@ public abstract class JaegerBaseTest {
         assertThat(span, isSpan().withTraceId(traceId)
                                  .withAttribute(SemanticAttributes.HTTP_ROUTE, "/spanTest/")
                                  .withAttribute(SemanticAttributes.HTTP_METHOD, "GET"));
+
+        // This is mostly just to check that getSpansForServiceName works for TracingNotEnabledTest
+        List<Span> allSpans = client.getSpansForServiceName("Test service");
+        assertThat(allSpans, hasItem(span));
+    }
+
+
+    @Test
+    @SkipForRepeat({MicroProfileActions.MP60_ID, TelemetryActions.MP14_MPTEL11_ID, TelemetryActions.MP41_MPTEL11_ID, TelemetryActions.MP50_MPTEL11_ID, MicroProfileActions.MP61_ID})
+    public void testBasicTelemetry2() throws Exception {
+        HttpRequest request = new HttpRequest(server, "/spanTest");
+        String traceId = request.run(String.class);
+        Log.info(c, "testBasic", "TraceId is " + traceId);
+
+        List<Span> spans = client.waitForSpansForTraceId(traceId, hasSize(1));
+        Log.info(c, "testBasic", "Spans returned: " + spans);
+
+        Span span = spans.get(0);
+
+        assertThat(span, isSpan().withTraceId(traceId)
+                                 .withAttribute(HTTP_ROUTE, "/spanTest/")
+                                 .withAttribute(HTTP_REQUEST_METHOD, "GET"));
 
         // This is mostly just to check that getSpansForServiceName works for TracingNotEnabledTest
         List<Span> allSpans = client.getSpansForServiceName("Test service");

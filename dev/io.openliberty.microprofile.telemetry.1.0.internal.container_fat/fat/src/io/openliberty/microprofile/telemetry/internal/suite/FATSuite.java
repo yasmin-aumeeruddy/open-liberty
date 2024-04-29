@@ -43,17 +43,18 @@ import io.openliberty.microprofile.telemetry.internal_fat.shared.TelemetryAction
                 AgentTest.class,
                 Agent129Test.class,
                 AgentConfigTest.class,
-                AgentConfigMultiAppTest.class,/*
+                AgentConfigMultiAppTest.class,
                 CrossFeatureJaegerTest.class,
                 CrossFeatureZipkinTest.class,
                 JaegerSecureOtelCollectorTest.class,
-                /*JaegerSecureOtlpTest.class,
+                JaegerSecureOtlpTest.class,
                 JaegerOtlpTest.class,
                 JaegerOtelCollectorTest.class,
-                JaegerLegacyTest.class,/*
+                JaegerLegacyTest.class,
                 TracingNotEnabledTest.class,
                 ZipkinOtelCollectorTest.class,
-                ZipkinTest.class,*/
+                ZipkinTest.class,
+                ZipkinTelemetry2Test.class,
 })
 
 @MinimumJavaLevel(javaLevel = 11)

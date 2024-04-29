@@ -19,8 +19,8 @@ alphaOpenTelemetryVersion=1.35.0.alpha
 openTelemetryInstrumentationVersion=2.1.0
 alphaOpenTelemetryInstrumentationVersion=2.1.0.alpha
 
-javac.source: 11
-javac.target: 11
+javac.source: 17
+javac.target: 17
 
 src: src, resources
 

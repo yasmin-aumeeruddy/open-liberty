@@ -54,8 +54,9 @@ import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinQueryCl
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpan;
 import io.openliberty.microprofile.telemetry.internal.utils.zipkin.ZipkinSpanMatcher;
 import io.opentelemetry.semconv.trace.attributes.SemanticAttributes;
-//import io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
-//import io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+// MP Telemetry 2.0 does not consume io.opentelemetry.semconv.trace.attributes.SemanticAttributes
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
 
 /**
  * Test exporting traces to a Zipkin server
@@ -102,7 +103,7 @@ public class ZipkinTest {
 
     @Test
     @SkipForRepeat({ TelemetryActions.MP14_MPTEL20_ID, TelemetryActions.MP41_MPTEL20_ID, TelemetryActions.MP50_MPTEL20_ID, TelemetryActions.MP60_MPTEL20_ID, TelemetryActions.MP61_MPTEL20_ID})
-    public void testBasic() throws Exception {
+    public void testBasicTelemetry1() throws Exception {
         HttpRequest request = new HttpRequest(server, "/spanTest");
         String traceId = request.run(String.class);
         Log.info(c, "testBasic", "TraceId is " + traceId);
@@ -114,8 +115,22 @@ public class ZipkinTest {
         assertThat(span, span().withTraceId(traceId)
                                 .withTag(SemanticAttributes.HTTP_ROUTE.getKey(), "/spanTest/")
                                 .withTag(SemanticAttributes.HTTP_METHOD.getKey(), "GET"));
-        
-        
+    }
+
+    @Test
+    @SkipForRepeat({MicroProfileActions.MP60_ID, TelemetryActions.MP14_MPTEL11_ID, TelemetryActions.MP41_MPTEL11_ID, TelemetryActions.MP50_MPTEL11_ID, MicroProfileActions.MP61_ID})
+    public void testBasicTelemetry2() throws Exception {
+        HttpRequest request = new HttpRequest(server, "/spanTest");
+        String traceId = request.run(String.class);
+        Log.info(c, "testBasic", "TraceId is " + traceId);
+
+        List<ZipkinSpan> spans = client.waitForSpansForTraceId(traceId, hasSize(1));
+        Log.info(c, "testBasic", "Spans returned: " + spans);
+
+        ZipkinSpan span = spans.get(0);
+        assertThat(span, span().withTraceId(traceId)
+                               .withTag(HTTP_ROUTE.getKey(), "/spanTest/")
+                               .withTag(HTTP_REQUEST_METHOD.getKey(), "GET"));
     }
 
     @Test
