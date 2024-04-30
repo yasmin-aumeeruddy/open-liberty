@@ -19,8 +19,13 @@ import com.ibm.ws.collector.Target;
 import com.ibm.ws.logging.collector.CollectorJsonUtils;
 import com.ibm.wsspi.collector.manager.Handler;
 
+import io.openliberty.microprofile.telemetry.internal.common.info.OpenTelemetryInfo;
+import io.openliberty.microprofile.telemetry.internal.interfaces.OpenTelemetryAccessor;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+//import io.opentelemetry.exporter.logging.*;
 
 @Component(name = OpenTelemetryHandler.COMPONENT_NAME, service = { Handler.class }, configurationPolicy = ConfigurationPolicy.OPTIONAL, property = { "service.vendor=IBM" })
 public class OpenTelemetryHandler extends Collector {
@@ -48,6 +53,14 @@ public class OpenTelemetryHandler extends Collector {
         System.out.println("IN ACTIVATE!");
         this.openTelemetry = AutoConfiguredOpenTelemetrySdk.initialize().getOpenTelemetrySdk();
         System.out.println("OpenTelemetry: " + openTelemetry);
+        
+        OpenTelemetryInfo openTelemetryInfo = OpenTelemetryAccessor.getOpenTelemetryInfo();
+         LoggerProvider logProvider = openTelemetryInfo.getOpenTelemetry().getLogsBridge();
+         
+         
+        LogRecordBuilder builder = logProvider.loggerBuilder(getHandlerName()).build().logRecordBuilder();
+        mapLogRecord(builder);
+        builder.emit();
         //final OpenTelemetryInfo openTelemetryInfo = OpenTelemetryAccessor.getOpenTelemetryInfo();
         //super.activate(cc, configuration);
         //System.out.println("AFTER SUPER ACTIVATE");
@@ -67,6 +80,10 @@ public class OpenTelemetryHandler extends Collector {
         validateSources(configuration);
     }
     
+    
+    private void mapLogRecord(LogRecordBuilder builder) {
+       //
+    }
     private void validateSources(Map<String, Object> config) {
         System.out.println("IN VALIDATE");
         if (config.containsKey(SOURCE_LIST_KEY)) {
