@@ -428,8 +428,11 @@ public class QueryInfo {
                                        " repository does not specify an entity class. To correct this, have the repository interface" +
                                        " extend DataRepository or another built-in repository interface and supply the entity class" +
                                        " as the first type variable."); // TODO NLS
-        else
-            return primaryEntityInfoFuture.join();
+
+        if (!primaryEntityInfoFuture.isDone() && TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
+            Tr.debug(this, tc, "await completion of primary entity info", primaryEntityInfoFuture);
+
+        return primaryEntityInfoFuture.join();
     }
 
     /**
@@ -910,10 +913,13 @@ public class QueryInfo {
 
             StringBuilder q = new StringBuilder(ql.length() + (selectLen >= 0 ? 0 : 50) + (fromLen >= 0 ? 0 : 50) + 2);
             q.append("SELECT");
-            if (selectLen > 0)
+            if (selectLen > 0) {
                 appendWithIdentifierName(ql, select0, select0 + selectLen, q);
-            else
+                if (fromLen == 0 && whereLen == 0 && orderLen == 0)
+                    q.append(' ');
+            } else {
                 q.append(' ').append(entityVar).append(' ');
+            }
 
             q.append("FROM");
             if (fromLen > 0 && !lacksEntityVar)
@@ -1182,20 +1188,18 @@ public class QueryInfo {
      * @param orderBy array of OrderBy annotations if present, otherwise an empty array.
      * @param count   The Count annotation if present, otherwise null.
      * @param exists  The Exists annotation if present, otherwise null.
-     * @param select  The Select annotation value if present, otherwise null.
      * @return Count, Delete, Exists, Find, Insert, Query, Save, or Update annotation if present. Otherwise null.
      * @throws UnsupportedOperationException if the combination of annotations is not valid.
      */
     @Trivial
     Annotation validateAnnotationCombinations(Delete delete, Insert insert, Update update, Save save,
                                               Find find, jakarta.data.repository.Query query, OrderBy[] orderBy,
-                                              Annotation count, Annotation exists, Annotation select) {
+                                              Annotation count, Annotation exists) {
         int o = orderBy.length == 0 ? 0 : 1;
 
         // These can be paired with OrderBy:
         int f = find == null ? 0 : 1;
         int q = query == null ? 0 : 1;
-        int s = select == null ? 0 : 1;
 
         // These cannot be paired with OrderBy or with each other:
         int ius = (insert == null ? 0 : 1) +
@@ -1209,12 +1213,12 @@ public class QueryInfo {
 
         if (iusdce + f > 1 // more than one of (Insert, Update, Save, Delete, Count, Exists, Find)
             || iusdce + o > 1 // more than one of (Insert, Update, Save, Delete, Count, Exists, OrderBy)
-            || iusdce + q + s > 1) { // one of (Insert, Update, Save, Delete, Count, Exists) with Query or Select, or both Query and Select
+            || iusdce + q > 1) { // one of (Insert, Update, Save, Delete, Count, Exists) with Query
 
             // Invalid combination of multiple annotations
 
             List<String> annoClassNames = new ArrayList<String>();
-            for (Annotation anno : Arrays.asList(count, delete, exists, find, insert, query, save, select, update))
+            for (Annotation anno : Arrays.asList(count, delete, exists, find, insert, query, save, update))
                 if (anno != null)
                     annoClassNames.add(anno.annotationType().getName());
             if (orderBy.length > 0)

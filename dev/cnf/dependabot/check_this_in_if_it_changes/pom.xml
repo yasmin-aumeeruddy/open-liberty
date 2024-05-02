@@ -3189,7 +3189,7 @@
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>org.eclipse.persistence.asm</artifactId>
-      <version>9.6.0</version>
+      <version>9.7.0</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
@@ -4394,6 +4394,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
+      <version>3.2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.data</groupId>
+      <artifactId>spring-data-commons</artifactId>
       <version>3.2.4</version>
     </dependency>
     <dependency>

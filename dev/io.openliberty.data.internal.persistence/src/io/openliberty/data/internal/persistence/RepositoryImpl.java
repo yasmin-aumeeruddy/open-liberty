@@ -24,9 +24,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.RecordComponent;
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLRecoverableException;
@@ -126,6 +123,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
     public RepositoryImpl(DataExtensionProvider provider, DataExtension extension, EntityManagerBuilder builder,
                           Class<R> repositoryInterface, Class<?> primaryEntityClass,
                           Map<Class<?>, List<QueryInfo>> queriesPerEntityClass) {
+        // EntityManagerBuilder.run guarantees that the future added to the following map will be completed even if an error occurs
         this.primaryEntityInfoFuture = primaryEntityClass == null ? null : builder.entityInfoMap.computeIfAbsent(primaryEntityClass, EntityInfo::newFuture);
         this.provider = provider;
         this.repositoryInterface = repositoryInterface;
@@ -143,20 +141,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
             } else {
                 boolean inheritance = entityClass.getAnnotation(Inheritance.class) != null; // TODO what do we need to do this with?
 
-                Class<?> jpaEntityClass;
-                Class<?> recordClass = null;
-                if (entityClass.isRecord())
-                    try {
-                        recordClass = entityClass;
-                        jpaEntityClass = recordClass.getClassLoader().loadClass(recordClass.getName() + "Entity");
-                    } catch (ClassNotFoundException x) {
-                        // TODO figure out how to best report this error to the user
-                        throw new MappingException("Unable to load generated entity class for record " + recordClass, x); // TODO NLS
-                    }
-                else
-                    jpaEntityClass = entityClass;
-
-                CompletableFuture<EntityInfo> entityInfoFuture = builder.entityInfoMap.computeIfAbsent(jpaEntityClass, EntityInfo::newFuture);
+                CompletableFuture<EntityInfo> entityInfoFuture = builder.entityInfoMap.computeIfAbsent(entityClass, EntityInfo::newFuture);
                 entityInfoFutures.add(entityInfoFuture);
 
                 for (QueryInfo queryInfo : entry.getValue()) {
@@ -185,12 +170,29 @@ public class RepositoryImpl<R> implements InvocationHandler {
                             .handle((ignore, x) -> {
                                 Map<String, CompletableFuture<EntityInfo>> entityInfos = new HashMap<>();
                                 for (CompletableFuture<EntityInfo> future : entityInfoFutures) {
-                                    if (future.isCompletedExceptionally())
+                                    if (future.isCompletedExceptionally()) {
                                         entityInfos.putIfAbsent(EntityInfo.FAILED, future);
-                                    else if (future.isDone())
-                                        entityInfos.put(future.join().name, future);
-                                    else
+                                    } else if (future.isDone()) {
+                                        EntityInfo entityInfo = future.join();
+                                        CompletableFuture<EntityInfo> conflict = entityInfos.put(entityInfo.name, future);
+                                        if (entityInfo.recordClass != null && conflict == null) {
+                                            String recordName = entityInfo.name.substring(0, entityInfo.name.length() - EntityInfo.RECORD_ENTITY_SUFFIX.length());
+                                            conflict = entityInfos.put(recordName, future);
+                                        }
+                                        if (conflict != null) {
+                                            EntityInfo conflictInfo = conflict.join(); // already completed
+                                            List<String> classNames = List.of((entityInfo.recordClass == null ? entityInfo.entityClass : entityInfo.recordClass).getName(),
+                                                                              (conflictInfo.recordClass == null ? conflictInfo.entityClass : conflictInfo.recordClass).getName());
+                                            // TODO NLS, consider splitting message for records/normal entities
+                                            MappingException conflictX = new MappingException("The " + classNames + " entities have conflicting names. " +
+                                                                                              "When using records as entities, an entity name consisting of " +
+                                                                                              "the record name suffixed with " + EntityInfo.RECORD_ENTITY_SUFFIX +
+                                                                                              " is generated.");
+                                            entityInfos.putIfAbsent(EntityInfo.FAILED, CompletableFuture.failedFuture(conflictX));
+                                        }
+                                    } else {
                                         entityInfos.putIfAbsent(EntityInfo.FAILED, CompletableFuture.failedFuture(x));
+                                    }
                                 }
                                 return entityInfos;
                             });
@@ -247,8 +249,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
      * Invoked when the bean for the repository is disposed.
      */
     public void beanDisposed() {
-        // TODO re-enable when using a single bean for the repository rather than sharing the repository across multiple beans
-        // isDisposed.set(true);
+        isDisposed.set(true);
     }
 
     /**
@@ -260,6 +261,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
      */
     @Trivial
     private QueryInfo completeQueryInfo(EntityInfo entityInfo, QueryInfo queryInfo) {
+        // This code path does not require the record name in the map because it is not used for @Query
         return completeQueryInfo(Collections.singletonMap(entityInfo.name, CompletableFuture.completedFuture(entityInfo)),
                                  queryInfo);
     }
@@ -308,11 +310,10 @@ public class RepositoryImpl<R> implements InvocationHandler {
             // experimental annotation types
             Annotation count = provider.compat.getCountAnnotation(method);
             Annotation exists = provider.compat.getExistsAnnotation(method);
-            Annotation select = provider.compat.getSelectAnnotation(method);
 
             Annotation methodTypeAnno = queryInfo.validateAnnotationCombinations(delete, insert, update, save,
                                                                                  find, query, orderBy,
-                                                                                 count, exists, select);
+                                                                                 count, exists);
 
             if (query != null) { // @Query annotation
                 queryInfo.initForQuery(query.value(), multiType, entityInfos, primaryEntityInfoFuture);
@@ -341,16 +342,9 @@ public class RepositoryImpl<R> implements InvocationHandler {
                     q = generateQueryFromMethodName(queryInfo, countPages);
                 }
 
-                // TODO did we break the following? Maybe move this into the above methods?
-                // @Select annotation only
-                if (q == null && queryInfo.type == null && select != null) {
-                    queryInfo.type = QueryInfo.Type.FIND;
-                    q = generateSelectClause(queryInfo, select);
-                    if (countPages)
-                        generateCount(queryInfo, null);
-                } else if (queryInfo.type == QueryInfo.Type.FIND_AND_DELETE
-                           && multiType != null
-                           && Stream.class.isAssignableFrom(multiType)) {
+                if (queryInfo.type == QueryInfo.Type.FIND_AND_DELETE
+                    && multiType != null
+                    && Stream.class.isAssignableFrom(multiType)) {
                     throw new UnsupportedOperationException("The " + method.getName() + " method of the " + repositoryInterface.getName() +
                                                             " repository interface cannot use the " +
                                                             method.getReturnType().getName() + " return type for a delete operation.");
@@ -425,7 +419,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
                 queryInfo.sorts = queryInfo.sorts == null ? new ArrayList<>(orderBy.length + 2) : queryInfo.sorts;
                 if (q == null)
                     if (queryInfo.jpql == null) {
-                        q = generateSelectClause(queryInfo, select); // TODO can select ever be present here and not already handled by other code path?
+                        q = generateSelectClause(queryInfo);
                         if (countPages)
                             generateCount(queryInfo, null);
                     } else {
@@ -1256,7 +1250,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
             // Write new JPQL, starting with SELECT or UPDATE
             if (!hasUpdateParam) {
                 queryInfo.type = QueryInfo.Type.FIND;
-                q = generateSelectClause(queryInfo, provider.compat.getSelectAnnotation(queryInfo.method));
+                q = generateSelectClause(queryInfo);
             } else {
                 queryInfo.type = QueryInfo.Type.UPDATE;
                 q = new StringBuilder(250).append("UPDATE ").append(queryInfo.entityInfo.name).append(' ').append(o).append(" SET");
@@ -1574,7 +1568,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
                 orderBy = methodName.indexOf("OrderBy", by + 2);
             }
             parseFindClause(queryInfo, methodName, by > 0 ? by : orderBy > 0 ? orderBy : -1);
-            q = generateSelectClause(queryInfo, provider.compat.getSelectAnnotation(queryInfo.method));
+            q = generateSelectClause(queryInfo);
             if (by > 0) {
                 int where = q.length();
                 generateWhereClause(queryInfo, methodName, by + 2, orderBy > 0 ? orderBy : methodName.length(), q);
@@ -1600,8 +1594,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
                                                             " repository method."); // TODO NLS
                 queryInfo.type = QueryInfo.Type.FIND_AND_DELETE;
                 parseDeleteBy(queryInfo, by);
-                Annotation select = null; // provider.compat.getSelectAnnotation(queryInfo.method); // TODO This would be limited by collision with update count/boolean
-                q = generateSelectClause(queryInfo, select);
+                q = generateSelectClause(queryInfo);
                 queryInfo.jpqlDelete = generateDeleteById(queryInfo);
             } else { // DELETE
                 queryInfo.type = queryInfo.type == null ? QueryInfo.Type.DELETE : queryInfo.type;
@@ -1739,7 +1732,7 @@ public class RepositoryImpl<R> implements InvocationHandler {
         } else if (methodTypeAnno instanceof Delete) {
             if (queryInfo.isFindAndDelete()) {
                 queryInfo.type = QueryInfo.Type.FIND_AND_DELETE;
-                q = generateSelectClause(queryInfo, null);
+                q = generateSelectClause(queryInfo);
                 queryInfo.jpqlDelete = generateDeleteById(queryInfo);
             } else { // DELETE
                 queryInfo.type = QueryInfo.Type.DELETE;
@@ -1775,20 +1768,21 @@ public class RepositoryImpl<R> implements InvocationHandler {
      * Generates the SELECT clause of the JPQL.
      *
      * @param queryInfo query information
-     * @param select    Select annotation if present on the method.
      * @return the SELECT clause.
      */
-    private StringBuilder generateSelectClause(QueryInfo queryInfo, Annotation select) {
+    private StringBuilder generateSelectClause(QueryInfo queryInfo) {
         StringBuilder q = new StringBuilder(200);
         String o = queryInfo.entityVar;
         String o_ = queryInfo.entityVar_;
         EntityInfo entityInfo = queryInfo.entityInfo;
 
-        String[] cols;
-        if (select == null) {
+        String[] cols, selections = provider.compat.getSelections(queryInfo.method);
+        if (selections == null || selections.length == 0) {
             cols = null;
+        } else if (queryInfo.type == QueryInfo.Type.FIND_AND_DELETE) {
+            // TODO NLS message for error path once selections are supported function
+            throw new UnsupportedOperationException();
         } else {
-            String[] selections = provider.compat.getSelections(select);
             cols = new String[selections.length];
             for (int i = 0; i < cols.length; i++) {
                 String name = entityInfo.getAttributeName(selections[i], true);
@@ -2561,32 +2555,69 @@ public class RepositoryImpl<R> implements InvocationHandler {
                                     returnValue = results.iterator();
                                 } else if (queryInfo.returnArrayType != null) {
                                     int size = results.size();
-                                    Object firstResult = size == 0 ? null : results.get(0);
-                                    if (firstResult != null && firstResult.getClass().isArray()) {
-                                        if (size == 1) {
-                                            Class<?> optionalType = queryInfo.getOptionalResultType();
-                                            if (firstResult.getClass().equals(optionalType))
-                                                returnValue = firstResult;
-                                            else {
-                                                int len = Array.getLength(firstResult);
-                                                returnValue = Array.newInstance(queryInfo.returnArrayType, len);
-                                                for (int i = 0; i < len; i++) {
-                                                    Object element = Array.get(firstResult, i);
-                                                    Array.set(returnValue, i, queryInfo.returnArrayType.isInstance(element) //
-                                                                    ? element : to(queryInfo.returnArrayType, element, true));
-                                                }
-                                            }
-                                        } else { // result is a list of multiple arrays
-                                            returnValue = results;
+                                    Object firstNonNullResult = null;
+                                    for (Object result : results)
+                                        if (result != null) {
+                                            firstNonNullResult = result;
+                                            break;
                                         }
-                                    } else {
-                                        // TODO Size 0 should be an error when the selected attribute is an array.
-                                        // The following makes sense when not selecting an array attribute, and instead
-                                        // using array to represent multiple results returned.
+                                    if (firstNonNullResult == null
+                                        || queryInfo.type == QueryInfo.Type.FIND_AND_DELETE
+                                        || queryInfo.returnArrayType != Object.class && queryInfo.returnArrayType.isInstance(firstNonNullResult)
+                                        || queryInfo.returnArrayType.isPrimitive() && isWrapperClassFor(queryInfo.returnArrayType, firstNonNullResult.getClass())) {
                                         returnValue = Array.newInstance(queryInfo.returnArrayType, size);
                                         int i = 0;
                                         for (Object result : results)
                                             Array.set(returnValue, i++, result);
+                                    } else if (firstNonNullResult.getClass().isArray()) {
+                                        if (trace && tc.isDebugEnabled())
+                                            Tr.debug(this, tc, "convert " + firstNonNullResult.getClass().getName() +
+                                                               " to " + queryInfo.returnArrayType.getName());
+                                        if (queryInfo.returnArrayType.isArray()) {
+                                            // convert List<Object[]> to array of array
+                                            returnValue = Array.newInstance(queryInfo.returnArrayType, size);
+                                            int i = 0;
+                                            for (Object result : results)
+                                                if (result == null) {
+                                                    Array.set(returnValue, i++, result);
+                                                } else {
+                                                    // Object[] needs conversion to returnArrayType
+                                                    Class<?> subarrayType = queryInfo.returnArrayType.getComponentType();
+                                                    int len = Array.getLength(result);
+                                                    Object subarray = Array.newInstance(subarrayType, len);
+                                                    for (int j = 0; j < len; j++) {
+                                                        Object element = Array.get(result, j);
+                                                        Array.set(subarray, j, subarrayType.isInstance(element) //
+                                                                        ? element : to(subarrayType, element, true));
+                                                    }
+                                                    Array.set(returnValue, i++, subarray);
+                                                }
+                                        } else if (size == 1) {
+                                            // convert size 1 List<Object[]> to array
+                                            Class<?> optionalType = queryInfo.getOptionalResultType();
+                                            if (firstNonNullResult.getClass().equals(optionalType))
+                                                returnValue = firstNonNullResult;
+                                            else {
+                                                int len = Array.getLength(firstNonNullResult);
+                                                returnValue = Array.newInstance(queryInfo.returnArrayType, len);
+                                                for (int i = 0; i < len; i++) {
+                                                    Object element = Array.get(firstNonNullResult, i);
+                                                    Array.set(returnValue, i, queryInfo.returnArrayType.isInstance(element) //
+                                                                    ? element : to(queryInfo.returnArrayType, element, true));
+                                                }
+                                            }
+                                        } else {
+                                            // List<Object[]> with multiple Object[] elements cannot convert to a one dimensional array
+                                            throw new NonUniqueResultException(""); // TODO NLS
+                                        }
+                                    } else {
+                                        throw new MappingException("The " + queryInfo.returnArrayType.getName() +
+                                                                   " array type that is declared to be returned by the " +
+                                                                   queryInfo.method.getName() + " method of the " +
+                                                                   queryInfo.method.getDeclaringClass().getName() +
+                                                                   " repository is incompatible with the " +
+                                                                   firstNonNullResult.getClass().getName() +
+                                                                   " type of the observed query results."); // TODO NLS
                                     }
                                 } else if (results.isEmpty()) {
                                     throw new EmptyResultException("Query with return type of " + returnType.getName() +
@@ -2800,6 +2831,24 @@ public class RepositoryImpl<R> implements InvocationHandler {
         }
     }
 
+    /**
+     * Indicates if the specified class is a wrapper for the primitive class.
+     *
+     * @param primitive primitive class.
+     * @param cl        another class that might be a wrapper class for the primitive class.
+     * @return true if the class is the wrapper class for the primitive class, otherwise false.
+     */
+    private final boolean isWrapperClassFor(Class<?> primitive, Class<?> cl) {
+        return primitive == long.class && cl == Long.class ||
+               primitive == int.class && cl == Integer.class ||
+               primitive == float.class && cl == Float.class ||
+               primitive == double.class && cl == Double.class ||
+               primitive == char.class && cl == Character.class ||
+               primitive == byte.class && cl == Byte.class ||
+               primitive == boolean.class && cl == Boolean.class ||
+               primitive == short.class && cl == Short.class;
+    }
+
     @Trivial
     private final Object oneResult(List<?> results) {
         int size = results.size();
@@ -3007,11 +3056,13 @@ public class RepositoryImpl<R> implements InvocationHandler {
      * @param failIfNotConverted whether or not to fail if unable to convert the value.
      * @return new instance of the requested type.
      */
+    @Trivial // avoid tracing value from customer data
     private static final Object to(Class<?> type, Object item, boolean failIfNotConverted) {
         Object result = item;
         if (item == null) {
             if (type.isPrimitive())
-                throw new NullPointerException(); // TODO NLS
+                throw new MappingException("Query returned a null result which is not compatible with the type that is " +
+                                           "expected by the repository method signature: " + type.getName()); // TODO NLS
         } else if (item instanceof Number && (type.isPrimitive() || Number.class.isAssignableFrom(type))) {
             Number n = (Number) item;
             if (long.class.equals(type) || Long.class.equals(type))
@@ -3028,13 +3079,17 @@ public class RepositoryImpl<R> implements InvocationHandler {
                 result = n.byteValue();
             else if (boolean.class.equals(type) || Boolean.class.equals(type))
                 result = n.longValue() != 0L;
+            else if (failIfNotConverted)
+                throw new MappingException("Query returned a result of type " + item.getClass().getName() +
+                                           " which is not compatible with the type that is expected by the repository method signature: " +
+                                           type.getName()); // TODO
         } else if (type.isAssignableFrom(String.class)) {
             result = item.toString();
-        }
-        if (failIfNotConverted && result == item && item != null)
+        } else if (failIfNotConverted) {
             throw new MappingException("Query returned a result of type " + item.getClass().getName() +
                                        " which is not compatible with the type that is expected by the repository method signature: " +
                                        type.getName()); // TODO
+        }
         return result;
     }
 
@@ -3061,14 +3116,13 @@ public class RepositoryImpl<R> implements InvocationHandler {
         Class<?> oClass = o == null ? null : o.getClass();
         if (o != null && oClass.isRecord())
             try {
-                final Object recordObj = o;
-                entity = AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () -> {
-                    Class<?> entityClass = oClass.getClassLoader().loadClass(oClass.getName() + "Entity");
-                    Constructor<?> ctor = entityClass.getConstructor(oClass);
-                    return ctor.newInstance(recordObj);
-                });
-            } catch (PrivilegedActionException x) {
-                throw new MappingException("Unable to convert record " + oClass + " to generated entity class.", x.getCause()); // TODO NLS
+                Class<?> entityClass = oClass.getClassLoader().loadClass(oClass.getName() + "Entity");
+                Constructor<?> ctor = entityClass.getConstructor(oClass);
+                entity = ctor.newInstance(o);
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | //
+                            InvocationTargetException | NoSuchMethodException | SecurityException x) {
+                throw new MappingException("Unable to convert record " + oClass + " to generated entity class.", //
+                                x instanceof InvocationTargetException ? x.getCause() : x); // TODO NLS
             }
         if (entity != o && TraceComponent.isAnyTracingEnabled() && tc.isDebugEnabled())
             Tr.debug(tc, "toEntity " + oClass.getName() + " --> " + entity.getClass().getName());
