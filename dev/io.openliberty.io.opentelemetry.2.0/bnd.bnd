@@ -40,7 +40,8 @@ Import-Package: \
 	org.osgi.framework,\
 	com.ibm.websphere.ras,\
 	com.ibm.websphere.ras.annotation,\
-	io.openliberty.microprofile.telemetry.internal.common.resources
+	io.openliberty.microprofile.telemetry.internal.common.resources,\
+	com.fasterxml.jackson.core
 
 Export-Package: \
   io.opentelemetry.extension.trace.propagation;version=${openTelemetryVersion};thread-context=true,\
@@ -61,7 +62,11 @@ Export-Package: \
   !io.opentelemetry.internal.shaded.*;version=${openTelemetryVersion},\
   io.opentelemetry.api.common;version=${openTelemetryVersion},\
   io.opentelemetry.instrumentation.api.instrumenter.util;version=${openTelemetryVersion};thread-context=true,\
-  io.opentelemetry.*;version=${openTelemetryVersion}
+  io.opentelemetry.*;version=${openTelemetryVersion};thread-context=true,\
+  com.fasterxml.jackson.core.*;version=2.15.2;thread-context=true,\
+  io.opentelemetry.exporter.otlp;version=${openTelemetryVersion};thread-context=true,\
+  io.opentelemetry.exporter.logging;version=${openTelemetryVersion};thread-context=true
+  
 
 Include-Resource: \
  META-INF=resources/META-INF
@@ -111,6 +116,8 @@ Require-Capability: osgi.ee; filter:="(&(osgi.ee=JavaSE)(version=11))"
 	io.opentelemetry:opentelemetry-sdk-metrics;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry:opentelemetry-sdk-trace;version='${openTelemetryVersion}';strategy=exact,\
 	io.opentelemetry.semconv:opentelemetry-semconv;version='1.23.1.alpha';strategy=exact,\
+	com.fasterxml.jackson.core:jackson-core;version=2.15.2;strategy=exact,\
+	com.fasterxml.jackson.core:jackson-databind;version=2.15.2;strategy=exact,\
 	com.ibm.ws.classloading;version=latest,\
 	org.eclipse.osgi;version=latest,\
 	com.ibm.websphere.appserver.spi.logging;version=latest,\
