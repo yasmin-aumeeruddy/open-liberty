@@ -50,16 +50,6 @@ public class OpenTelemetryAccessor {
         return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
     }
 
-//    public static OpenTelemetryInfo setServerOpenTelemetryInfo(ClassLoader newClassLoader) {
-//        System.out.println("Setting class loader!1");
-//        Optional<OpenTelemetryInfo> openTelemetryInfo = openTelemetryInfoFactoryService.call((factory) -> {
-//            return factory.setServerOpenTelemetryInfo(newClassLoader);
-//        });
-//
-//        return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
-//
-//    }
-
     public static OpenTelemetryInfo getServerOpenTelemetryInfo(ClassLoader newClassLoader) {
         Optional<OpenTelemetryInfo> openTelemetryInfo = openTelemetryInfoFactoryService.call((factory) -> {
             return factory.getServerOpenTelemetryInfo(newClassLoader);

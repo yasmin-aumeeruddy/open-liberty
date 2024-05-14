@@ -109,10 +109,9 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             if (atomicRef == null) {
                 //If this is triggered by internal code that isn't supposed to call ApplicationStateListener.applicationStarting() don't throw an error
                 String j2EEName = metaData.getJ2EEName().toString();
-                if ((j2EEName.startsWith("io.openliberty") || j2EEName.startsWith("com.ibm.ws")) && !(j2EEName.contains("logginjg"))) {
+                if ((j2EEName.startsWith("io.openliberty") || j2EEName.startsWith("com.ibm.ws")) && !(j2EEName.contains("logging"))) {
 
                     Tr.info(tc, "CWMOT5100.tracing.is.disabled", j2EEName);
-                    System.out.println("Disabling Telemetry! " + metaData);
                     return new DisabledOpenTelemetryInfo();
                 }
                 //If it isn't throw something nicer than an NPE.
@@ -143,16 +142,14 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
-
-                ClassLoader newClassLoader2 = OpenTelemetry.noop().getClass().getClassLoader();
-
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
                     return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
                                                               .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
-                                                              .setServiceClassLoader(newClassLoader2)
+                                                              .setServiceClassLoader(newClassLoader)
                                                               .build().getOpenTelemetrySdk();
                 });
 
+                System.out.println("Server OpenTelemetry Instance: " + openTelemetry.toString());
                 if (openTelemetry != null) {
                     return new EnabledOpenTelemetryInfo(true, openTelemetry, appName);
                 }
@@ -161,6 +158,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             //By default, MicroProfile Telemetry tracing is off.
             //The absence of an installed SDK is a “no-op” API
             //Operations on a Tracer, or on Spans have no side effects and do nothing
+
             Tr.info(tc, "CWMOT5100.tracing.is.disabled", appName);
 
             return new DisabledOpenTelemetryInfo();
@@ -188,12 +186,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
-//                OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
-//                    return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
-//                                                              .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
-//                                                              .setServiceClassLoader(Thread.currentThread().getContextClassLoader()).build().getOpenTelemetrySdk();
 
-                System.out.println("Try to get far: " + appName);
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
                     return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
                                                               .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
@@ -201,7 +194,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                                                               .build().getOpenTelemetrySdk();
                 });
 
-                System.out.println("Get this far?@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " + appName + " -- " + openTelemetry.toString());
+                System.out.println("Application OpenTelemetry Instance: " + appName + " -- " + openTelemetry.toString());
                 if (openTelemetry != null) {
                     return new EnabledOpenTelemetryInfo(true, openTelemetry, appName);
                 }
@@ -266,7 +259,6 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     public void applicationStarting(ApplicationInfo appInfo) throws StateChangeException {
         //We do not actually initilize on application starting, we do that lazily if this is needed.
 
-        System.out.println("Application starting: " + appInfo.getName());
         ExtendedApplicationInfo extAppInfo = (ExtendedApplicationInfo) appInfo;
         OpenTelemetryInfoReference oTelRef = (OpenTelemetryInfoReference) extAppInfo.getMetaData().getMetaData(slotForOpenTelemetryInfoHolder);
 
@@ -348,19 +340,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     /** {@inheritDoc} */
     @Override
     public OpenTelemetryInfo getServerOpenTelemetryInfo(ClassLoader newClassLoader) {
-        // TODO Auto-generated method stub
-        System.out.println("Setting class loader!Getting");
-
         return createServerOpenTelemetryInfo(newClassLoader);
-//        return this.test;
     }
 
-//    @Override
-//    public OpenTelemetryInfo setServerOpenTelemetryInfo(ClassLoader newClassLoader) {
-//        System.out.println("Setting class loader!2");
-//        this.test = createServerOpenTelemetryInfo();
-//        return this.test;
-//        // TODO Auto-generated method stub
-//        // return createServerOpenTelemetryInfo();
-//    }
 }

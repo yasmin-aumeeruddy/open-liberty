@@ -34,7 +34,7 @@ public class OpenTelemetryVersionedConfigurationImpl implements OpenTelemetryInf
     // Version specific default properties
     @Override
     public Map<String, String> getTelemetryPropertyDefaults() {
-        Map<String, String> telemetryProperties = new HashMap<String, String>(); 
+        Map<String, String> telemetryProperties = new HashMap<String, String>();
         return telemetryProperties;
     }
 }

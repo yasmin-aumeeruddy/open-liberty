@@ -31,10 +31,4 @@ public interface OpenTelemetryInfoFactory {
      */
     OpenTelemetryInfo getOpenTelemetryInfo(ApplicationMetaData metaData);
 
-//    /**
-//     * @param newClassLoader
-//     * @return
-//     */
-//    OpenTelemetryInfo setServerOpenTelemetryInfo(ClassLoader newClassLoader);
-
 }
