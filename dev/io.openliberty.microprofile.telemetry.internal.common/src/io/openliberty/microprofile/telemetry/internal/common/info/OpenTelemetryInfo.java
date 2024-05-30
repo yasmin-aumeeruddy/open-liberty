@@ -27,6 +27,4 @@ public interface OpenTelemetryInfo {
      */
     void dispose();
 
-    public OpenTelemetry getTest();
-
 }

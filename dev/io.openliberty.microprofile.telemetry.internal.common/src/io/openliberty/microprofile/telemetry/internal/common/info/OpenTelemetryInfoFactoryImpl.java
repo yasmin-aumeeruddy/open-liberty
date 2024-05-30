@@ -78,15 +78,15 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     //This contains API calls that change between the upstream open telemetry version.
     //We get a partially configued SDK Builder from OSGi becase we are in a static context
     //and do not know which version of mpTelemetry will be in use.
-    @Reference
-    private OpenTelemetryVersionedConfiguration openTelemetryVersionedConfiguration;
-
-    @Reference
-    private OpenTelemetryServerVersionedConfiguration openTelemetryServerVersionedConfiguration;
+    private final OpenTelemetryVersionedConfiguration openTelemetryVersionedConfiguration;
 
     @Activate
-    public OpenTelemetryInfoFactoryImpl(@Reference MetaDataSlotService slotService) {
+    public OpenTelemetryInfoFactoryImpl(@Reference MetaDataSlotService slotService,
+                                        @Reference OpenTelemetryVersionedConfiguration openTelemetryVersionedConfiguration) {
+
         slotForOpenTelemetryInfoHolder = slotService.reserveMetaDataSlot(ApplicationMetaData.class);
+
+        this.openTelemetryVersionedConfiguration = openTelemetryVersionedConfiguration;
 
         createServerOpenTelemetryInfo();
     }
@@ -148,10 +148,10 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
-                    return openTelemetryServerVersionedConfiguration.getPartiallyConfiguredServerOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
-                                                                    .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
-                                                                    .setServiceClassLoader(classLoader)
-                                                                    .build().getOpenTelemetrySdk();
+                    return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
+                                                              .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
+                                                              .setServiceClassLoader(classLoader)
+                                                              .build().getOpenTelemetrySdk();
                 });
 
                 otelMap.put(otelInstanceName, openTelemetry);
@@ -176,10 +176,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
     public OpenTelemetryInfo createOpenTelemetryInfo() {
         try {
-            String appName = "SERVER";
-            if (ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData() != null) {
-                appName = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData().getJ2EEName().getApplication();
-            }
+            String appName = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData().getJ2EEName().getApplication();
 
             if (AgentDetection.isAgentActive()) {
                 // If we're using the agent, it will have set GlobalOpenTelemetry and we must use its instance
@@ -201,6 +198,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
                 otelMap.put(appName, openTelemetry);
 
+                //System.out.println("Created OTEL Instance for app: " + appName + " -- " + openTelemetry);
                 if (openTelemetry != null) {
                     return new EnabledOpenTelemetryInfo(true, openTelemetry, appName);
                 }
@@ -220,9 +218,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     }
 
     @Override
-    public OpenTelemetryInfo getTest(String appName) {
-
-        return new EnabledOpenTelemetryInfo(true, otelMap.get(appName), "randomAppName");
+    public OpenTelemetryInfo getOpenTelemetryInfo(String appName) {
+        return new EnabledOpenTelemetryInfo(true, otelMap.get(appName), appName);
     }
 
     private static OpenTelemetryInfo createDisposedOpenTelemetryInfo() {
@@ -258,7 +255,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                 }
             }
 
-//            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
+            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
 
             return telemetryProperties;
         } catch (Exception e) {
@@ -280,7 +277,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                 }
             }
 
-            //telemetryProperties.putAll(openTelemetryServerVersionedConfiguration.getServerTelemetryPropertyDefaults());
+            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
 
             return telemetryProperties;
         } catch (Exception e) {
@@ -361,13 +358,6 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
     }
 
-    public interface OpenTelemetryServerVersionedConfiguration {
-        public AutoConfiguredOpenTelemetrySdkBuilder getPartiallyConfiguredServerOpenTelemetrySDKBuilder();
-
-        public Map<String, String> getServerTelemetryPropertyDefaults();
-
-    }
-
     /*
      * There are two race conditions we need to protect against.
      *
@@ -380,12 +370,6 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     private class OpenTelemetryInfoReference extends AtomicReference<LazyInitializer<OpenTelemetryInfo>> {
 
         private static final long serialVersionUID = -4884222080590544495L;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public OpenTelemetryInfo getServerOpenTelemetryInfo() {
-        return createServerOpenTelemetryInfo();
     }
 
 }

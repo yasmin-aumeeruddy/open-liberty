@@ -107,7 +107,7 @@ public class OpenTelemetryHandler extends Collector {
 		System.out.println("IN LOGGINGACTIVATE!");
 		
 	
-		 System.out.println("Getting OTEL SERVER: " + OpenTelemetryAccessor.getTest("SERVER").getOpenTelemetry());
+		 System.out.println("Getting OTEL SERVER: " + OpenTelemetryAccessor.getOpenTelemetryInfo("SERVER").getOpenTelemetry());
 
         super.activate(cc, configuration);
         
@@ -184,8 +184,8 @@ public class OpenTelemetryHandler extends Collector {
 		                    if(extKey.equals("ext_appName")) {
 		                    	String appName = k.getStringValue();
 		                    	if(!appName.contains("io.openliberty") && !appName.contains("com.ibm.ws")) {
-		                    		otelInstance = OpenTelemetryAccessor.getTest(appName).getOpenTelemetry();
-		                    		//System.out.println("Getting app instance! " + appName  + " -- " + otelInstance); 
+		                    		otelInstance = OpenTelemetryAccessor.getOpenTelemetryInfo(appName).getOpenTelemetry();
+		                    		System.out.println("Getting app instance! " + appName  + " -- " + otelInstance); 
 		                    	}
 		                    }
 		                }
@@ -193,7 +193,7 @@ public class OpenTelemetryHandler extends Collector {
 		        }
 		        
 		        if(otelInstance == null) {
-            		otelInstance = OpenTelemetryAccessor.getTest("SERVER").getOpenTelemetry();
+            		otelInstance = OpenTelemetryAccessor.getOpenTelemetryInfo("SERVER").getOpenTelemetry();
 		        }
 		        
 		        LogRecordBuilder builder = otelInstance.getLogsBridge().loggerBuilder(OpenTelemetryConstants.INSTRUMENTATION_NAME).build().logRecordBuilder();

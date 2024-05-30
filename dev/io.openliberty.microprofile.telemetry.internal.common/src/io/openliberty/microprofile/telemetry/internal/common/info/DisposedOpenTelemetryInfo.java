@@ -61,13 +61,4 @@ public class DisposedOpenTelemetryInfo implements OpenTelemetryInfo {
             Tr.event(tc, "OpenTelemetryInfoFactory", "The stack that led to OpenTelemetryInfoFactory being called after " + appName + " has shutdown is:.", stackStream.toString());
         }
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public OpenTelemetry getTest() {
-        System.out.println("Disposed test");
-
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

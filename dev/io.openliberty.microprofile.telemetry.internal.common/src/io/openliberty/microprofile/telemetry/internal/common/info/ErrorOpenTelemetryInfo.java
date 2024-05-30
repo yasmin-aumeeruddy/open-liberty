@@ -35,11 +35,4 @@ public class ErrorOpenTelemetryInfo implements OpenTelemetryInfo {
 
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public OpenTelemetry getTest() {
-        System.out.println("Error OTEL info?");
-        // TODO Auto-generated method stub
-        return null;
-    }
 }

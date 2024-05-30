@@ -50,16 +50,9 @@ public class OpenTelemetryAccessor {
         return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
     }
 
-    public static OpenTelemetryInfo getServerOpenTelemetryInfo() {
+    public static OpenTelemetryInfo getOpenTelemetryInfo(String appName) {
         Optional<OpenTelemetryInfo> openTelemetryInfo = openTelemetryInfoFactoryService.call((factory) -> {
-            return factory.getServerOpenTelemetryInfo();
-        });
-        return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
-    }
-
-    public static OpenTelemetryInfo getTest(String appName) {
-        Optional<OpenTelemetryInfo> openTelemetryInfo = openTelemetryInfoFactoryService.call((factory) -> {
-            return factory.getTest(appName);
+            return factory.getOpenTelemetryInfo(appName);
         });
         return openTelemetryInfo.orElseGet(ErrorOpenTelemetryInfo::new);
 

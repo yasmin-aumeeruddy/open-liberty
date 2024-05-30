@@ -21,11 +21,6 @@ public interface OpenTelemetryInfoFactory {
     OpenTelemetryInfo getOpenTelemetryInfo();
 
     /**
-     * @return
-     */
-    OpenTelemetryInfo getServerOpenTelemetryInfo();
-
-    /**
      * @param metaData
      * @return
      */
@@ -34,6 +29,6 @@ public interface OpenTelemetryInfoFactory {
     /**
      * @return
      */
-    OpenTelemetryInfo getTest(String appName);
+    OpenTelemetryInfo getOpenTelemetryInfo(String appName);
 
 }

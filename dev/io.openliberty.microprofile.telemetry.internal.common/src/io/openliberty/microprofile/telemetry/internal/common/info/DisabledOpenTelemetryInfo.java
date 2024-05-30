@@ -35,12 +35,4 @@ public class DisabledOpenTelemetryInfo implements OpenTelemetryInfo {
 
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public OpenTelemetry getTest() {
-        System.out.println("Disabled test");
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

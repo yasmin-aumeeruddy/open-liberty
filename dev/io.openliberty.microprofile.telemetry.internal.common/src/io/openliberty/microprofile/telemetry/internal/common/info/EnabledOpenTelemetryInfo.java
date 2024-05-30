@@ -102,12 +102,4 @@ public class EnabledOpenTelemetryInfo implements OpenTelemetryInfo {
 
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public OpenTelemetry getTest() {
-        // TODO Auto-generated method stub
-        System.out.println("Get test?");
-        return this.openTelemetry;
-    }
-
 }
