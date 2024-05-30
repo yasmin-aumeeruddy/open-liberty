@@ -10,7 +10,6 @@
 package io.openliberty.microprofile.telemetry.internal.common.info;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
 
 /**
  * An impl of OpenTelemetryInfo that occurs if OpenTelemetry is Disabled
@@ -34,6 +33,14 @@ public class DisabledOpenTelemetryInfo implements OpenTelemetryInfo {
     public void dispose() {
         // No op
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OpenTelemetry getTest() {
+        System.out.println("Disabled test");
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

@@ -23,12 +23,17 @@ public interface OpenTelemetryInfoFactory {
     /**
      * @return
      */
-    OpenTelemetryInfo getServerOpenTelemetryInfo(ClassLoader newClassLoader);
+    OpenTelemetryInfo getServerOpenTelemetryInfo();
 
     /**
      * @param metaData
      * @return
      */
     OpenTelemetryInfo getOpenTelemetryInfo(ApplicationMetaData metaData);
+
+    /**
+     * @return
+     */
+    OpenTelemetryInfo getTest(String appName);
 
 }

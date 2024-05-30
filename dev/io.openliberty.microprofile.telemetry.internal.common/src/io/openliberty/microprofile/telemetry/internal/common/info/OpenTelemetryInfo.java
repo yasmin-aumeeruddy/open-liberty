@@ -10,7 +10,6 @@
 package io.openliberty.microprofile.telemetry.internal.common.info;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
 
 public interface OpenTelemetryInfo {
     /**
@@ -27,5 +26,7 @@ public interface OpenTelemetryInfo {
      * Disposes of the OpenTelemetry object within
      */
     void dispose();
+
+    public OpenTelemetry getTest();
 
 }

@@ -73,7 +73,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     private static final TraceComponent tc = Tr.register(OpenTelemetryInfoFactoryImpl.class);
 
     private final MetaDataSlot slotForOpenTelemetryInfoHolder;
-    private OpenTelemetryInfo test;
+    Map<String, OpenTelemetry> otelMap = new HashMap<String, OpenTelemetry>();
 
     //This contains API calls that change between the upstream open telemetry version.
     //We get a partially configued SDK Builder from OSGi becase we are in a static context
@@ -81,9 +81,14 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
     @Reference
     private OpenTelemetryVersionedConfiguration openTelemetryVersionedConfiguration;
 
+    @Reference
+    private OpenTelemetryServerVersionedConfiguration openTelemetryServerVersionedConfiguration;
+
     @Activate
     public OpenTelemetryInfoFactoryImpl(@Reference MetaDataSlotService slotService) {
         slotForOpenTelemetryInfoHolder = slotService.reserveMetaDataSlot(ApplicationMetaData.class);
+
+        createServerOpenTelemetryInfo();
     }
 
     @Override
@@ -94,6 +99,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             if (cmd != null) {
                 metaData = cmd.getModuleMetaData().getApplicationMetaData();
             }
+
             return getOpenTelemetryInfo(metaData);
         } catch (Exception e) {
             Tr.error(tc, Tr.formatMessage(tc, "CWMOT5002.telemetry.error", e));
@@ -109,7 +115,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             if (atomicRef == null) {
                 //If this is triggered by internal code that isn't supposed to call ApplicationStateListener.applicationStarting() don't throw an error
                 String j2EEName = metaData.getJ2EEName().toString();
-                if ((j2EEName.startsWith("io.openliberty") || j2EEName.startsWith("com.ibm.ws")) && !(j2EEName.contains("logging"))) {
+                if ((j2EEName.startsWith("io.openliberty") || j2EEName.startsWith("com.ibm.ws"))) {
 
                     Tr.info(tc, "CWMOT5100.tracing.is.disabled", j2EEName);
                     return new DisabledOpenTelemetryInfo();
@@ -125,33 +131,32 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
         }
     }
 
-    public OpenTelemetryInfo createServerOpenTelemetryInfo(ClassLoader newClassLoader) {
+    public OpenTelemetryInfo createServerOpenTelemetryInfo() {
         try {
-            String appName = "SERVER";
-            if (ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData() != null) {
-                appName = ComponentMetaDataAccessorImpl.getComponentMetaDataAccessor().getComponentMetaData().getJ2EEName().getApplication();
-            }
+            String otelInstanceName = "SERVER";
 
             if (AgentDetection.isAgentActive()) {
                 // If we're using the agent, it will have set GlobalOpenTelemetry and we must use its instance
                 // all config is handled by the agent in this case
-                return new EnabledOpenTelemetryInfo(true, GlobalOpenTelemetry.get(), appName);
+                return new EnabledOpenTelemetryInfo(true, GlobalOpenTelemetry.get(), otelInstanceName);
             }
 
-            final Map<String, String> telemetryProperties = getTelemetryProperties();
+            final Map<String, String> telemetryProperties = getServerTelemetryProperties();
+
+            ClassLoader classLoader = OpenTelemetry.noop().getClass().getClassLoader();
 
             //Builds tracer provider if user has enabled tracing aspects with config properties
             if (!checkDisabled(telemetryProperties)) {
                 OpenTelemetry openTelemetry = AccessController.doPrivileged((PrivilegedAction<OpenTelemetry>) () -> {
-                    return openTelemetryVersionedConfiguration.getPartiallyConfiguredOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
-                                                              .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
-                                                              .setServiceClassLoader(newClassLoader)
-                                                              .build().getOpenTelemetrySdk();
+                    return openTelemetryServerVersionedConfiguration.getPartiallyConfiguredServerOpenTelemetrySDKBuilder().addPropertiesCustomizer(x -> telemetryProperties) //Overrides OpenTelemetry's property order
+                                                                    .addResourceCustomizer(OpenTelemetryInfoFactoryImpl::customizeResource) //Defaults service name to application name
+                                                                    .setServiceClassLoader(classLoader)
+                                                                    .build().getOpenTelemetrySdk();
                 });
 
-                System.out.println("Server OpenTelemetry Instance: " + openTelemetry.toString());
+                otelMap.put(otelInstanceName, openTelemetry);
                 if (openTelemetry != null) {
-                    return new EnabledOpenTelemetryInfo(true, openTelemetry, appName);
+                    return new EnabledOpenTelemetryInfo(true, openTelemetry, otelInstanceName);
                 }
             }
 
@@ -159,7 +164,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             //The absence of an installed SDK is a “no-op” API
             //Operations on a Tracer, or on Spans have no side effects and do nothing
 
-            Tr.info(tc, "CWMOT5100.tracing.is.disabled", appName);
+            Tr.info(tc, "CWMOT5100.tracing.is.disabled", otelInstanceName);
 
             return new DisabledOpenTelemetryInfo();
         } catch (Exception e) {
@@ -194,7 +199,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                                                               .build().getOpenTelemetrySdk();
                 });
 
-                System.out.println("Application OpenTelemetry Instance: " + appName + " -- " + openTelemetry.toString());
+                otelMap.put(appName, openTelemetry);
+
                 if (openTelemetry != null) {
                     return new EnabledOpenTelemetryInfo(true, openTelemetry, appName);
                 }
@@ -211,6 +217,12 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
             return new ErrorOpenTelemetryInfo();
         }
 
+    }
+
+    @Override
+    public OpenTelemetryInfo getTest(String appName) {
+
+        return new EnabledOpenTelemetryInfo(true, otelMap.get(appName), "randomAppName");
     }
 
     private static OpenTelemetryInfo createDisposedOpenTelemetryInfo() {
@@ -246,9 +258,33 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
                 }
             }
 
-            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
+//            telemetryProperties.putAll(openTelemetryVersionedConfiguration.getTelemetryPropertyDefaults());
+
             return telemetryProperties;
         } catch (Exception e) {
+            Tr.error(tc, Tr.formatMessage(tc, "CWMOT5002.telemetry.error", e));
+            return new HashMap<String, String>();
+        }
+    }
+
+    private HashMap<String, String> getServerTelemetryProperties() {
+
+        try {
+            Config config = ConfigProvider.getConfig();
+            HashMap<String, String> telemetryProperties = new HashMap<>();
+            for (String propertyName : config.getPropertyNames()) {
+                if (propertyName.startsWith("otel") || propertyName.startsWith("OTEL")) {
+                    String normalizedName = propertyName.toLowerCase().replace('_', '.');
+                    config.getOptionalValue(normalizedName, String.class)
+                          .ifPresent(value -> telemetryProperties.put(normalizedName, value));
+                }
+            }
+
+            //telemetryProperties.putAll(openTelemetryServerVersionedConfiguration.getServerTelemetryPropertyDefaults());
+
+            return telemetryProperties;
+        } catch (Exception e) {
+            e.printStackTrace();
             Tr.error(tc, Tr.formatMessage(tc, "CWMOT5002.telemetry.error", e));
             return new HashMap<String, String>();
         }
@@ -268,6 +304,7 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
         if (oTelRef == null) {
             oTelRef = new OpenTelemetryInfoReference();
         }
+
         oTelRef.set(newSupplier);
         extAppInfo.getMetaData().setMetaData(slotForOpenTelemetryInfoHolder, oTelRef);
     }
@@ -321,6 +358,14 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
         public AutoConfiguredOpenTelemetrySdkBuilder getPartiallyConfiguredOpenTelemetrySDKBuilder();
 
         public Map<String, String> getTelemetryPropertyDefaults();
+
+    }
+
+    public interface OpenTelemetryServerVersionedConfiguration {
+        public AutoConfiguredOpenTelemetrySdkBuilder getPartiallyConfiguredServerOpenTelemetrySDKBuilder();
+
+        public Map<String, String> getServerTelemetryPropertyDefaults();
+
     }
 
     /*
@@ -339,8 +384,8 @@ public class OpenTelemetryInfoFactoryImpl implements ApplicationStateListener, O
 
     /** {@inheritDoc} */
     @Override
-    public OpenTelemetryInfo getServerOpenTelemetryInfo(ClassLoader newClassLoader) {
-        return createServerOpenTelemetryInfo(newClassLoader);
+    public OpenTelemetryInfo getServerOpenTelemetryInfo() {
+        return createServerOpenTelemetryInfo();
     }
 
 }

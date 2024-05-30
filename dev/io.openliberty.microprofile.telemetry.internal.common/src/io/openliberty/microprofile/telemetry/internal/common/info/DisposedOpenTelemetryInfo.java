@@ -16,7 +16,6 @@ import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Tracer;
 
 /**
  * An impl of OpenTelemetryInfo that only occurs if an OpenTelemetryInfo was created after the relevant application has shut down.
@@ -61,5 +60,14 @@ public class DisposedOpenTelemetryInfo implements OpenTelemetryInfo {
 
             Tr.event(tc, "OpenTelemetryInfoFactory", "The stack that led to OpenTelemetryInfoFactory being called after " + appName + " has shutdown is:.", stackStream.toString());
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OpenTelemetry getTest() {
+        System.out.println("Disposed test");
+
+        // TODO Auto-generated method stub
+        return null;
     }
 }
