@@ -42,4 +42,6 @@
     <javaPermission className="java.net.URLPermission" name="http://localhost:*/-" actions="*" />
     
     <include location="../fatTestPorts.xml" />
+
+    <mpTelemetry source="message"/>
 </server>
