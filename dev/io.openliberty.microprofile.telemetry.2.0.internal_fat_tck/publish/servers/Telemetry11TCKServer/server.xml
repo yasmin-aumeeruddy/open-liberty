@@ -11,17 +11,19 @@
 <server>
     <featureManager>
         <feature>componenttest-2.0</feature>
-        <feature>concurrent-3.0</feature>
-        <feature>jsonb-3.0</feature>
-        <feature>ssl-1.0</feature>
-        <feature>restfulWS-3.1</feature>
-        <feature>mpRestClient-3.0</feature>
-        <feature>localconnector-1.0</feature>
+        <feature>localConnector-1.0</feature>
         <feature>cdi-4.0</feature>
-        <feature>servlet-6.0</feature>
-        <feature>mpTelemetry-2.0</feature>
-        <feature>arquillian-support-jakarta-2.1</feature>
+        <feature>restfulWS-3.1</feature>
+        <feature>jsonb-3.0</feature>
         <feature>mpConfig-3.1</feature>
+        <feature>mpRestClient-3.0</feature>
+        <feature>arquillian-support-jakarta-2.1</feature>
+        <feature>ssl-1.0</feature>
+        <!-- Servlet required since we cannot use rest protocol because rest requests create spans which results in more spans than the tests expect -->
+        <!-- See https://github.com/eclipse/microprofile-telemetry/issues/72 -->
+        <feature>servlet-6.0</feature>
+        <feature>mpTelemetry-1.1</feature>
+        <feature>concurrent-3.0</feature>
     </featureManager>
 
     <!-- Required by Arquillian ServletTestRunner -->
@@ -38,8 +40,11 @@
     <!-- Required by Tests -->
     <!-- Test makes requests to localhost using HttpUrlConnection -->
     <javaPermission className="java.net.URLPermission" name="http://localhost:*/-" actions="*" />
+
+    <javaPermission className= "java.util.logging.LoggingPermission" name="control"/>
+    <javaPermission className="java.lang.management.ManagementPermission" name="monitor"/>
+
+    <javaPermission className="java.lang.RuntimePermission" name="getenv.logbackDisableServletContainerInitializer" />
     
     <include location="../fatTestPorts.xml" />
-
-    <mpTelemetry source="message"/>
 </server>

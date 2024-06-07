@@ -60,16 +60,20 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/../../../lib/fattest.simplicity.jar</systemPath> <!-- This will point to build/libs/autoFVT/lib/fattest.simplicity.jar -->
         </dependency>
-        
+
         <dependency>
             <groupId>org.eclipse.microprofile.telemetry</groupId>
             <artifactId>microprofile-telemetry-tracing-tck</artifactId>
             <version>${mptelemetry.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.eclipse.microprofile.telemetry</groupId>
             <artifactId>microprofile-telemetry-metrics-tck</artifactId>
+            <version>${mptelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.microprofile.telemetry</groupId>
+            <artifactId>microprofile-telemetry-logs-tck</artifactId>
             <version>${mptelemetry.version}</version>
         </dependency>
 
