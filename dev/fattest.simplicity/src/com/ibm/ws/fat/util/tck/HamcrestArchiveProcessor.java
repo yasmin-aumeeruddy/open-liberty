@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2018-2019 IBM Corporation and others.
+ * Copyright (c) 2018-2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -25,7 +25,7 @@ public class HamcrestArchiveProcessor extends AbstractArchiveWeaver {
     private final Set<File> files = Collections.singleton(new File("../../../lib/hamcrest-all-1.3.jar"));
 
     @Override
-    protected Set<File> getFilesToWeave() {
+    protected Set<File> getJarsToWeave() {
         return files;
     }
 }

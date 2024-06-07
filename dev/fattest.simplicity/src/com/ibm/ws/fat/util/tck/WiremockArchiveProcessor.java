@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018-2019 IBM Corporation and others.
+ * Copyright (c) 2018-2024 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
@@ -25,7 +25,7 @@ public class WiremockArchiveProcessor extends AbstractArchiveWeaver {
                                                                    "/usr/servers/FATServer/wiremock-standalone-2.14.0.jar"));
 
     @Override
-    protected Set<File> getFilesToWeave() {
+    protected Set<File> getJarsToWeave() {
         return files;
     }
 }
