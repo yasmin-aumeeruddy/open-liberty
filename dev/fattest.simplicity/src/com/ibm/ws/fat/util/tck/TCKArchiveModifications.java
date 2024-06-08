@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-2.0/
- * 
+ *
  * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
@@ -63,6 +63,13 @@ public enum TCKArchiveModifications implements ArchiveModification {
         public void applyModification(ExtensionBuilder extensionBuilder) {
             LOG.log(Level.INFO, "WLP: Adding Extension com.ibm.ws.fat.util.tck.WiremockArchiveProcessor");
             extensionBuilder.service(ApplicationArchiveProcessor.class, WiremockArchiveProcessor.class);
+        }
+    },
+    TELEMETRY_PORTING {
+        @Override
+        public void applyModification(ExtensionBuilder extensionBuilder) {
+            LOG.log(Level.INFO, "WLP: Adding Extension com.ibm.ws.fat.util.tck.TelemetryPortingArchiveProcessor");
+            extensionBuilder.service(ApplicationArchiveProcessor.class, TelemetryPortingArchiveProcessor.class);
         }
     };
 

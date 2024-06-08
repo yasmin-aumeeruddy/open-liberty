@@ -23,7 +23,7 @@
     </test> -->
     <test name="tck-package-org.eclipse.microprofile.telemetry.logs.tck">
         <packages>
-            <package name="org.eclipse.microprofile.telemetry.logs.*"></package>
+            <package name="org.eclipse.microprofile.telemetry.tracing.tck.async.*"></package>
         </packages>
     </test>
 </suite>
