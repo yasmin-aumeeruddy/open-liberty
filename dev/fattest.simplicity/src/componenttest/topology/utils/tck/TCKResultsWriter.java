@@ -79,7 +79,11 @@ public class TCKResultsWriter {
             specURL = "https://jakarta.ee/specifications/" + specName + "/" + specVersion;
             tckURL = "https://download.eclipse.org/ee4j/" + specName + "/jakartaee10/promoted/eftl/" + specName + "-tck-" + specVersion + ".zip"; //just a placeholder, needs to be manually updated
         }
-        String filename = null;
+        // Replace the "_" with "-" in the directory name to keep consistency
+        String filename = (openLibertyVersion + "-" + fullSpecName.replace(" ", "-") + "-Java" + javaMajorVersion +"-TCKResults.adoc").replace("_", "-");
+        Path outputDirectory = null;
+        Path outputPath = null;
+        //Adoc file for certification is added to results/REPEAT_ID/
         if (repeat.contains("FeatureReplacementAction")) {
             String newRepeat = repeat.replaceAll("FeatureReplacementAction.*REMOVE", "remove")
                             .replaceAll("\\[", "")
@@ -87,14 +91,19 @@ public class TCKResultsWriter {
                             .replaceAll("ADD", "add")
                             .replaceAll("  ", " ")
                             .replaceAll(" ", "_");
-            filename = (openLibertyVersion + "-" + fullSpecName.replace(" ", "-") + "-Java" + javaMajorVersion + newRepeat + "-TCKResults.adoc").replace("_", "-");
+            outputDirectory = Paths.get("results/" + newRepeat);
+            outputPath = Paths.get("results/"+ newRepeat, filename);
         } else {
-            filename = (openLibertyVersion + "-" + fullSpecName.replace(" ", "-") + "-Java" + javaMajorVersion + repeat + "-TCKResults.adoc").replace("_", "-");
+            outputDirectory = Paths.get("results/" + repeat);
+            outputPath = Paths.get("results/" + repeat, filename);
         }
-        // Replace the "_" with "-" in filename to keep consistency
 
-        Path outputPath = Paths.get("results", filename);
         File outputFile = outputPath.toFile();
+        File outputDir = outputDirectory.toFile();
+
+        if(!outputDir.exists()){
+            outputDir.mkdir();
+        }
 
         String timestamp = Instant.now()
                         .truncatedTo(ChronoUnit.SECONDS)
